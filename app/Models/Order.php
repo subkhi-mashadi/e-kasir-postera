@@ -11,8 +11,9 @@ class Order extends Model
     use BelongsToCompany;
 
     protected $fillable = [
-        'uuid', 'company_id', 'branch_id', 'user_id', 'customer_id', 'customer_name', 'table_id',
-        'invoice_no', 'type', 'source', 'status',
+        'uuid', 'company_id', 'branch_id', 'user_id', 'customer_id', 'customer_name', 'customer_ip', 'table_id',
+        'invoice_no', 'midtrans_order_id', 'midtrans_qr_url', 'midtrans_status',
+        'type', 'source', 'preferred_payment', 'kitchen_status', 'status',
         'subtotal', 'discount_amount', 'tax_amount', 'total',
         'paid_amount', 'change_amount', 'points_earned', 'points_used',
         'notes', 'synced_at', 'created_offline_at',

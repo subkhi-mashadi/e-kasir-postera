@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use App\Models\Table;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use SimpleSoftwareIO\QrCode\Facades\QrCode;
 
@@ -75,7 +76,9 @@ class TableController extends Controller
 
     public function qr(Table $table)
     {
+        URL::forceRootUrl(config('app.url'));
         $url = route('order.show', $table->qr_token);
+        URL::forceRootUrl(null); // reset so Blade view route() uses request URL
         $svg = QrCode::format('svg')->size(300)->errorCorrection('M')->generate($url);
         return view('app.tables.qr', compact('table', 'svg', 'url'));
     }

@@ -21,6 +21,20 @@
     </div>
     <div class="flex items-center gap-3">
         <span class="text-amber-300/70 text-xs">{{ auth()->user()->name }}</span>
+        {{-- Incoming QR orders button (only shown on POS page via Alpine) --}}
+        @if (request()->routeIs('pos.index'))
+        <button id="btn-incoming"
+                class="relative text-amber-300/70 hover:text-amber-100 text-xs border border-amber-700 px-2.5 py-1 rounded-lg transition-colors hidden"
+                onclick="document.dispatchEvent(new CustomEvent('open-incoming'))">
+            🔔 Pesanan Masuk
+            <span id="incoming-badge"
+                  class="absolute -top-1.5 -right-1.5 bg-red-500 text-white text-xs w-4 h-4 rounded-full items-center justify-center font-bold hidden"></span>
+        </button>
+        @endif
+        <a href="{{ route('kitchen.index') }}"
+           class="text-amber-300/70 hover:text-amber-100 text-xs border border-amber-700 px-2.5 py-1 rounded-lg transition-colors">
+            👨‍🍳 Dapur
+        </a>
         <a href="{{ route('app.dashboard') }}"
            class="text-amber-300/70 hover:text-amber-100 text-xs border border-amber-700 px-2.5 py-1 rounded-lg transition-colors">
             Dashboard

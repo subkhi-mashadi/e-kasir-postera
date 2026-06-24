@@ -23,7 +23,7 @@
     @endif
 
     <form action="{{ isset($branch) ? route('app.branches.update', $branch) : route('app.branches.store') }}"
-          method="POST" class="space-y-4">
+          method="POST" enctype="multipart/form-data" class="space-y-4">
         @csrf
         @if (isset($branch))
             @method('PUT')
@@ -58,6 +58,20 @@
             <textarea id="address" name="address" rows="3"
                       class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-500 resize-none"
                       placeholder="Alamat lengkap cabang">{{ old('address', $branch->address ?? '') }}</textarea>
+        </div>
+
+        {{-- QRIS Image --}}
+        <div x-data="{preview: '{{ isset($branch) && $branch->qris_image ? Storage::url($branch->qris_image) : '' }}',
+                       onFile(e){ const f=e.target.files[0]; if(f) this.preview=URL.createObjectURL(f); }}">
+            <label class="block text-sm font-medium text-slate-700 mb-1.5">Gambar QRIS (opsional)</label>
+            <p class="text-xs text-slate-400 mb-2">Upload gambar QRIS statis untuk ditampilkan ke pelanggan saat bayar via QR ordering.</p>
+            <template x-if="preview">
+                <div class="mb-2">
+                    <img :src="preview" alt="QRIS Preview" class="w-40 h-40 object-contain border border-slate-200 rounded-xl bg-white p-2">
+                </div>
+            </template>
+            <input type="file" name="qris_image" accept="image/*" @change="onFile($event)"
+                   class="w-full text-sm text-slate-500 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:text-xs file:font-medium file:bg-amber-50 file:text-amber-700 hover:file:bg-amber-100 cursor-pointer">
         </div>
 
         <div class="flex items-center gap-3 pt-1">

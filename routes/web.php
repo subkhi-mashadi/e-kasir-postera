@@ -6,10 +6,15 @@ use App\Http\Controllers\App\BranchController;
 use App\Http\Controllers\App\CategoryController;
 use App\Http\Controllers\App\CustomerController;
 use App\Http\Controllers\App\DashboardController;
+use App\Http\Controllers\App\OrderController;
+use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\InventoryController;
 use App\Http\Controllers\App\ModifierGroupController;
 use App\Http\Controllers\App\ProductController;
 use App\Http\Controllers\App\TableController;
+use App\Http\Controllers\Kitchen\KitchenController;
+use App\Http\Controllers\Order\QrOrderController;
+use App\Http\Controllers\Payment\MidtransWebhookController;
 use App\Http\Controllers\POS\POSController;
 use Illuminate\Support\Facades\Route;
 
@@ -62,6 +67,12 @@ Route::middleware(['auth', 'tenant.active', 'branch.selected'])
         Route::get('inventory', [InventoryController::class, 'index'])->name('inventory.index');
         Route::match(['POST', 'PATCH'], 'inventory/{inventory}/adjust', [InventoryController::class, 'adjust'])->name('inventory.adjust');
 
+        // Orders history
+        Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+
+        // Reports
+        Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+
         // Customers
         Route::resource('customers', CustomerController::class)->except(['show']);
     });
@@ -75,12 +86,33 @@ Route::middleware(['auth', 'tenant.active', 'branch.selected'])
         Route::get('/products', [POSController::class, 'products'])->name('products');
         Route::post('/orders', [POSController::class, 'store'])->name('orders.store');
         Route::get('/orders', [POSController::class, 'orders'])->name('orders.index');
+        Route::get('/orders/incoming', [POSController::class, 'incomingOrders'])->name('orders.incoming');
+        Route::get('/orders/ready', [POSController::class, 'readyOrders'])->name('orders.ready');
         Route::get('/orders/{order}/receipt', [POSController::class, 'receipt'])->name('orders.receipt');
+        Route::post('/orders/{order}/accept', [POSController::class, 'acceptOrder'])->name('orders.accept');
+        Route::post('/orders/{order}/reject', [POSController::class, 'rejectOrder'])->name('orders.reject');
         Route::post('/voucher/validate', [POSController::class, 'validateVoucher'])->name('voucher.validate');
     });
 
-// ── Public QR order page (placeholder — built in Fase 3) ─────────────────────
-Route::get('/order/{token}', fn () => abort(404))->name('order.show');
+// ── Public QR ordering (Fase 3) ──────────────────────────────────────────────
+Route::get('/order/{token}', [QrOrderController::class, 'show'])->name('order.show');
+Route::post('/order/{token}/submit', [QrOrderController::class, 'submit'])->name('order.submit');
+Route::get('/order/{token}/history', [QrOrderController::class, 'history'])->name('order.history');
+Route::get('/order/{token}/payment-status/{orderId}', [QrOrderController::class, 'paymentStatus'])->name('order.payment-status');
+Route::get('/order-submitted', fn () => view('order.submitted'))->name('order.submitted');
+
+// ── Midtrans webhook ──────────────────────────────────────────────────────────
+Route::post('/webhook/midtrans', [MidtransWebhookController::class, 'handle'])->name('webhook.midtrans');
+
+// ── Kitchen display ───────────────────────────────────────────────────────────
+Route::middleware(['auth', 'tenant.active', 'branch.selected'])
+    ->prefix('kitchen')
+    ->name('kitchen.')
+    ->group(function () {
+        Route::get('/', [KitchenController::class, 'index'])->name('index');
+        Route::get('/orders', [KitchenController::class, 'orders'])->name('orders');
+        Route::post('/orders/{order}/status', [KitchenController::class, 'updateStatus'])->name('orders.status');
+    });
 
 // ── Subscription expired ──────────────────────────────────────────────────────
 Route::middleware('auth')->get('/subscription/expired', fn () => view('subscription.expired'))

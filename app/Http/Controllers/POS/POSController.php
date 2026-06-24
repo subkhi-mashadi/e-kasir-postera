@@ -174,6 +174,7 @@ class POSController extends Controller
                 'type'            => $data['type'],
                 'source'          => 'pos',
                 'status'          => 'paid',
+                'kitchen_status'  => 'pending',
                 'subtotal'        => $subtotal,
                 'discount_amount' => $discountAmount,
                 'tax_amount'      => $taxTotal,
@@ -235,7 +236,11 @@ class POSController extends Controller
             $orderId = $order->id;
         });
 
-        return response()->json(['order_id' => $orderId]);
+        $order = Order::find($orderId);
+        return response()->json([
+            'order_id'   => $orderId,
+            'invoice_no' => $order?->invoice_no,
+        ]);
     }
 
     public function receipt(Order $order)
@@ -253,6 +258,114 @@ class POSController extends Controller
             ->paginate(30);
 
         return view('pos.orders', compact('orders'));
+    }
+
+    public function incomingOrders()
+    {
+        $branchId = session('branch_id') ?? auth()->user()->branch_id;
+
+        $orders = Order::with(['items.modifiers', 'table'])
+            ->where('branch_id', $branchId)
+            ->where('source', 'qr')
+            ->where('status', 'open')
+            ->where('preferred_payment', 'cash')
+            ->latest()
+            ->get()
+            ->map(fn ($o) => [
+                'id'                => $o->id,
+                'table_name'        => $o->table?->name ?? '—',
+                'customer_name'     => $o->customer_name,
+                'preferred_payment' => $o->preferred_payment,
+                'total'             => (float) $o->total,
+                'notes'             => $o->notes,
+                'created_at'        => $o->created_at->format('H:i'),
+                'items'         => $o->items->map(fn ($i) => [
+                    'product_name' => $i->product_name,
+                    'variant_name' => $i->variant_name,
+                    'qty'          => $i->qty,
+                    'notes'        => $i->notes,
+                    'modifiers'    => $i->modifiers->pluck('option_name')->join(', '),
+                ])->values(),
+            ]);
+
+        return response()->json(['orders' => $orders]);
+    }
+
+    public function acceptOrder(Request $request, Order $order)
+    {
+        $branchId = session('branch_id') ?? auth()->user()->branch_id;
+
+        abort_if($order->branch_id !== (int) $branchId, 403);
+        abort_if($order->status !== 'open', 422, 'Pesanan sudah diproses.');
+
+        $data = $request->validate([
+            'payment_method' => 'required|in:cash,qris,transfer,card,credit',
+            'paid_amount'    => 'required|numeric|min:0',
+            'reference'      => 'nullable|string|max:100',
+        ]);
+
+        $paidAmount = (float) $data['paid_amount'];
+        $change     = max(0, $paidAmount - (float) $order->total);
+
+        DB::transaction(function () use ($order, $data, $paidAmount, $change) {
+            $order->update([
+                'status'         => 'paid',
+                'kitchen_status' => 'pending',
+                'paid_amount'    => $paidAmount,
+                'change_amount'  => $change,
+                'user_id'        => auth()->id(),
+                'invoice_no'     => $this->generateInvoice($order->branch_id),
+                'synced_at'      => now(),
+            ]);
+
+            $order->payments()->create([
+                'method'    => $data['payment_method'],
+                'amount'    => $paidAmount,
+                'reference' => $data['reference'] ?? null,
+            ]);
+        });
+
+        return response()->json(['ok' => true]);
+    }
+
+    private function generateInvoice(int $branchId): string
+    {
+        $today = now()->format('Ymd');
+        $seq   = Order::whereDate('created_at', today())->where('branch_id', $branchId)->lockForUpdate()->count();
+        return 'INV/' . $today . '/' . str_pad($branchId, 2, '0', STR_PAD_LEFT) . '/' . str_pad($seq, 4, '0', STR_PAD_LEFT);
+    }
+
+    public function readyOrders()
+    {
+        $branchId = session('branch_id') ?? auth()->user()->branch_id;
+
+        $orders = Order::with(['table'])
+            ->where('branch_id', $branchId)
+            ->where('status', 'paid')
+            ->where('kitchen_status', 'ready')
+            ->latest()
+            ->get()
+            ->map(fn ($o) => [
+                'id'            => $o->id,
+                'invoice_no'    => $o->invoice_no,
+                'table_name'    => $o->table?->name ?? '—',
+                'customer_name' => $o->customer_name,
+                'created_at'    => $o->created_at->format('H:i'),
+            ]);
+
+        return response()->json(['orders' => $orders]);
+    }
+
+    public function rejectOrder(Order $order)
+    {
+        $branchId = session('branch_id') ?? auth()->user()->branch_id;
+
+        abort_if($order->branch_id !== (int) $branchId, 403);
+        abort_if($order->status !== 'open', 422, 'Pesanan sudah diproses.');
+
+        $order->update(['status' => 'cancelled']);
+
+        return response()->json(['ok' => true]);
     }
 
     public function validateVoucher(Request $request)

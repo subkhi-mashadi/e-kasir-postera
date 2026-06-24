@@ -262,11 +262,30 @@ Semua endpoint POS discope `company_id`/`branch_id` user.
 - Diskon/voucher/poin.
 - **Milestone:** transaksi penuh online + struk + stok berkurang.
 
-### Fase 3 — QR Ordering (2–3 hari)
-- Halaman menu publik `/order/{token}`.
-- Submit order pelanggan → masuk antrian kasir.
-- Notifikasi (polling dulu; Reverb opsional nanti).
-- **Milestone:** pesan dari HP pelanggan → muncul di kasir.
+### Fase 3 — QR Ordering ✅ SELESAI
+- ✅ Halaman menu publik `/order/{token}` — browse menu, pilih item + varian + modifier, keranjang.
+- ✅ Submit order pelanggan → buat `order` (`type=qr`, `status=open`).
+- ✅ Riwayat pesanan pelanggan `/order/{token}/history` (by IP, polling 10 detik, progress bar kitchen status).
+
+**Pembayaran QRIS (Midtrans Core API):**
+- ✅ Order QRIS: generate dynamic QR via Midtrans → tampilkan QR image di UI pelanggan.
+- ✅ Polling status pembayaran setiap 2 detik (`/order/{token}/payment-status/{orderId}`).
+- ✅ UI auto-update ke success screen saat Midtrans return `settlement`/`capture`.
+- ✅ Order QRIS langsung masuk antrian dapur (`kitchen_status=pending`) tanpa konfirmasi kasir.
+- ✅ Webhook Midtrans (`POST /webhook/midtrans`) untuk konfirmasi server-side (butuh ngrok/public URL untuk lokal).
+
+**Panel Kasir (POS):**
+- ✅ Incoming orders panel: polling 10 detik, hanya tampilkan order cash (QRIS bypass).
+- ✅ Kasir konfirmasi/tolak order cash — styled popup (bukan native `confirm()`).
+- ✅ Panel incoming auto-tutup saat antrian kosong.
+- ✅ Notifikasi order siap antar dari dapur — floating toast (polling 15 detik), kasir bisa tandai `delivered`.
+
+**Kitchen Display:**
+- ✅ Halaman dapur `/kitchen` — dark theme, 3 kolom: Antrian | Sedang Diproses | Siap Diantarkan.
+- ✅ Dapur ubah `kitchen_status`: `pending` → `preparing` → `ready` → `delivered`.
+- ✅ Auto-refresh 8 detik, kartu "siap" punya animasi pulse.
+
+- **Milestone:** ✅ Pesan dari HP pelanggan → muncul di kasir & dapur → dapur proses → kasir antar.
 
 ### Fase 4 — PWA & Offline Sync (4–6 hari) ⚠️ paling kompleks
 - Manifest + service worker (Workbox), installable.

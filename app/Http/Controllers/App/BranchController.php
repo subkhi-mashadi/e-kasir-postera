@@ -5,6 +5,7 @@ namespace App\Http\Controllers\App;
 use App\Http\Controllers\Controller;
 use App\Models\Branch;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 
 class BranchController extends Controller
 {
@@ -22,14 +23,18 @@ class BranchController extends Controller
     public function store(Request $request)
     {
         $data = $request->validate([
-            'name'      => 'required|string|max:100',
-            'code'      => 'nullable|string|max:20',
-            'phone'     => 'nullable|string|max:20',
-            'address'   => 'nullable|string',
-            'is_active' => 'boolean',
+            'name'       => 'required|string|max:100',
+            'code'       => 'nullable|string|max:20',
+            'phone'      => 'nullable|string|max:20',
+            'address'    => 'nullable|string',
+            'qris_image' => 'nullable|image|max:2048',
+            'is_active'  => 'boolean',
         ]);
         $data['company_id'] = auth()->user()->company_id;
         $data['is_active']  = $request->boolean('is_active', true);
+        if ($request->hasFile('qris_image')) {
+            $data['qris_image'] = $request->file('qris_image')->store('qris', 'public');
+        }
         Branch::create($data);
         return redirect()->route('app.branches.index')->with('success', 'Cabang berhasil ditambahkan.');
     }
@@ -42,13 +47,22 @@ class BranchController extends Controller
     public function update(Request $request, Branch $branch)
     {
         $data = $request->validate([
-            'name'      => 'required|string|max:100',
-            'code'      => 'nullable|string|max:20',
-            'phone'     => 'nullable|string|max:20',
-            'address'   => 'nullable|string',
-            'is_active' => 'boolean',
+            'name'       => 'required|string|max:100',
+            'code'       => 'nullable|string|max:20',
+            'phone'      => 'nullable|string|max:20',
+            'address'    => 'nullable|string',
+            'qris_image' => 'nullable|image|max:2048',
+            'is_active'  => 'boolean',
         ]);
         $data['is_active'] = $request->boolean('is_active', true);
+        if ($request->hasFile('qris_image')) {
+            if ($branch->qris_image) {
+                Storage::disk('public')->delete($branch->qris_image);
+            }
+            $data['qris_image'] = $request->file('qris_image')->store('qris', 'public');
+        } else {
+            unset($data['qris_image']);
+        }
         $branch->update($data);
         return redirect()->route('app.branches.index')->with('success', 'Cabang berhasil diperbarui.');
     }

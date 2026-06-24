@@ -4,76 +4,111 @@
 @section('content')
 <div class="flex h-[calc(100vh-3rem)] overflow-hidden"
      x-data="posApp()"
-     x-init="loadProducts()">
+     x-init="init()">
 
     {{-- LEFT: Product Browser --}}
     <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
 
-        {{-- Search + Category bar --}}
-        <div class="bg-white border-b border-slate-100 px-4 py-3 flex gap-3 items-center shrink-0">
+        {{-- Search bar --}}
+        <div class="bg-white border-b border-slate-100 px-4 py-3 shrink-0">
             <input type="text" x-model="search" placeholder="Cari produk..."
-                   class="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-amber-500 bg-slate-50">
-
-            <div class="flex items-center gap-2 overflow-x-auto">
-                <button @click="activeCategory = null"
-                        :class="activeCategory === null
-                            ? 'bg-amber-500 text-white'
-                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                        class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors">
-                    Semua
-                </button>
-                <template x-for="cat in categories" :key="cat.id">
-                    <button @click="activeCategory = cat.id"
-                            :class="activeCategory === cat.id
-                                ? 'bg-amber-500 text-white'
-                                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                            class="shrink-0 px-3 py-1.5 rounded-xl text-xs font-medium transition-colors">
-                        <span x-text="(cat.icon ? cat.icon + ' ' : '') + cat.name"></span>
-                    </button>
-                </template>
-            </div>
+                   class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-amber-500 bg-slate-50">
         </div>
 
-        {{-- Product Grid --}}
+        {{-- Product area --}}
         <div class="flex-1 overflow-y-auto p-4">
             <div x-show="loading" class="flex items-center justify-center h-40 text-slate-400 text-sm">
                 Memuat produk...
             </div>
 
-            <div x-show="!loading && filteredProducts.length === 0" class="flex items-center justify-center h-40 text-slate-400 text-sm">
-                Tidak ada produk ditemukan.
-            </div>
+            {{-- Search: flat grid --}}
+            <template x-if="!loading && search.trim() !== ''">
+                <div>
+                    <div x-show="filteredProducts.length === 0" class="flex items-center justify-center h-40 text-slate-400 text-sm">
+                        Produk tidak ditemukan.
+                    </div>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                        <template x-for="product in filteredProducts" :key="product.id">
+                            <button type="button" @click="openProduct(product)"
+                                    :class="!product.is_available ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md hover:-translate-y-0.5 cursor-pointer'"
+                                    :disabled="!product.is_available"
+                                    class="bg-white rounded-2xl p-3 text-left transition-all shadow-sm border border-slate-100">
+                                <div class="w-full aspect-square bg-amber-50 rounded-xl overflow-hidden flex items-center justify-center mb-2">
+                                    <template x-if="product.image_url">
+                                        <img :src="product.image_url" :alt="product.name" class="w-full h-full object-cover">
+                                    </template>
+                                    <template x-if="!product.image_url">
+                                        <span class="text-3xl" x-text="product.category_icon || '🍽️'"></span>
+                                    </template>
+                                </div>
+                                <div class="text-xs font-semibold text-slate-800 leading-tight line-clamp-2 mb-1" x-text="product.name"></div>
+                                <div class="text-xs text-amber-600 font-bold" x-text="'Rp ' + formatNumber(product.price)"></div>
+                                <div class="mt-1">
+                                    <template x-if="!product.is_available">
+                                        <span class="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">Tdk Tersedia</span>
+                                    </template>
+                                    <template x-if="product.is_available && product.track_stock && product.stock !== null && product.stock <= 0">
+                                        <span class="text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Tersedia</span>
+                                    </template>
+                                    <template x-if="product.is_available && product.track_stock && product.stock > 0">
+                                        <span class="text-xs text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-md" x-text="'Stok: ' + Math.floor(product.stock)"></span>
+                                    </template>
+                                </div>
+                            </button>
+                        </template>
+                    </div>
+                </div>
+            </template>
 
-            <div x-show="!loading" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-                <template x-for="product in filteredProducts" :key="product.id">
-                    <button type="button" @click="openProduct(product)"
-                            :class="!product.is_available ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md hover:-translate-y-0.5 cursor-pointer'"
-                            :disabled="!product.is_available"
-                            class="bg-white rounded-2xl p-3 text-left transition-all shadow-sm border border-slate-100">
-                        <div class="w-full aspect-square bg-amber-50 rounded-xl overflow-hidden flex items-center justify-center mb-2">
-                            <template x-if="product.image_url">
-                                <img :src="product.image_url" :alt="product.name" class="w-full h-full object-cover">
-                            </template>
-                            <template x-if="!product.image_url">
-                                <span class="text-3xl" x-text="product.category_icon || '🍽️'"></span>
-                            </template>
+            {{-- No search: grouped by category --}}
+            <template x-if="!loading && search.trim() === ''">
+                <div class="space-y-6">
+                    <template x-for="group in productsByCategory" :key="group.category_id">
+                        <div>
+                            {{-- Category separator --}}
+                            <div class="flex items-center gap-2 mb-3">
+                                <span class="text-base leading-none" x-text="group.icon || '🍽️'"></span>
+                                <span class="text-sm font-bold text-slate-700 uppercase tracking-wide" x-text="group.name"></span>
+                                <div class="flex-1 h-px bg-slate-200"></div>
+                                <span class="text-xs text-slate-400" x-text="group.products.length + ' item'"></span>
+                            </div>
+                            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3">
+                                <template x-for="product in group.products" :key="product.id">
+                                    <button type="button" @click="openProduct(product)"
+                                            :class="!product.is_available ? 'opacity-50 cursor-not-allowed' : 'hover:shadow-md hover:-translate-y-0.5 cursor-pointer'"
+                                            :disabled="!product.is_available"
+                                            class="bg-white rounded-2xl p-3 text-left transition-all shadow-sm border border-slate-100">
+                                        <div class="w-full aspect-square bg-amber-50 rounded-xl overflow-hidden flex items-center justify-center mb-2">
+                                            <template x-if="product.image_url">
+                                                <img :src="product.image_url" :alt="product.name" class="w-full h-full object-cover">
+                                            </template>
+                                            <template x-if="!product.image_url">
+                                                <span class="text-3xl" x-text="product.category_icon || '🍽️'"></span>
+                                            </template>
+                                        </div>
+                                        <div class="text-xs font-semibold text-slate-800 leading-tight line-clamp-2 mb-1" x-text="product.name"></div>
+                                        <div class="text-xs text-amber-600 font-bold" x-text="'Rp ' + formatNumber(product.price)"></div>
+                                        <div class="mt-1">
+                                            <template x-if="!product.is_available">
+                                                <span class="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">Tdk Tersedia</span>
+                                            </template>
+                                            <template x-if="product.is_available && product.track_stock && product.stock !== null && product.stock <= 0">
+                                                <span class="text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Tersedia</span>
+                                            </template>
+                                            <template x-if="product.is_available && product.track_stock && product.stock > 0">
+                                                <span class="text-xs text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-md" x-text="'Stok: ' + Math.floor(product.stock)"></span>
+                                            </template>
+                                        </div>
+                                    </button>
+                                </template>
+                            </div>
                         </div>
-                        <div class="text-xs font-semibold text-slate-800 leading-tight line-clamp-2 mb-1" x-text="product.name"></div>
-                        <div class="text-xs text-amber-600 font-bold" x-text="'Rp ' + formatNumber(product.price)"></div>
-                        <div class="mt-1">
-                            <template x-if="!product.is_available">
-                                <span class="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">Tdk Tersedia</span>
-                            </template>
-                            <template x-if="product.is_available && product.track_stock && product.stock !== null && product.stock <= 0">
-                                <span class="text-xs text-emerald-600 bg-emerald-50 px-1.5 py-0.5 rounded-md">Tersedia</span>
-                            </template>
-                            <template x-if="product.is_available && product.track_stock && product.stock > 0">
-                                <span class="text-xs text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded-md" x-text="'Stok: ' + Math.floor(product.stock)"></span>
-                            </template>
-                        </div>
-                    </button>
-                </template>
-            </div>
+                    </template>
+                    <div x-show="productsByCategory.length === 0" class="flex items-center justify-center h-40 text-slate-400 text-sm">
+                        Belum ada produk tersedia.
+                    </div>
+                </div>
+            </template>
         </div>
     </div>
 
@@ -365,6 +400,265 @@
             </div>
         </div>
     </div>
+
+    {{-- Incoming QR Orders Panel --}}
+    <div x-show="showIncoming" x-cloak
+         class="fixed inset-0 z-50 flex items-start justify-end p-4 pt-16 bg-black/40"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click.self="showIncoming = false">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-y-auto max-h-[80vh]"
+             x-transition:enter="transition ease-out duration-150"
+             x-transition:enter-start="opacity-0 translate-y-2"
+             x-transition:enter-end="opacity-100 translate-y-0">
+
+            <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 sticky top-0 bg-white">
+                <h3 class="font-bold text-slate-800">🔔 Pesanan Masuk
+                    <template x-if="incomingOrders.length > 0">
+                        <span class="ml-2 bg-red-500 text-white text-xs px-2 py-0.5 rounded-full" x-text="incomingOrders.length"></span>
+                    </template>
+                </h3>
+                <button @click="showIncoming = false" class="text-slate-400 hover:text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div x-show="incomingOrders.length === 0" class="flex items-center justify-center h-32 text-slate-400 text-sm">
+                Tidak ada pesanan QR masuk saat ini.
+            </div>
+
+            <div class="divide-y divide-slate-100">
+                <template x-for="order in incomingOrders" :key="order.id">
+                    <div class="p-4">
+                        <div class="flex items-start justify-between mb-2">
+                            <div>
+                                <p class="font-bold text-slate-800 text-sm" x-text="order.table_name"></p>
+                                <p class="text-xs text-slate-400" x-text="(order.customer_name ? order.customer_name + ' · ' : '') + order.created_at"></p>
+                            </div>
+                            <p class="font-black text-amber-600 text-sm" x-text="'Rp ' + formatNumber(order.total)"></p>
+                        </div>
+                        <div class="space-y-1 mb-3">
+                            <template x-for="item in order.items" :key="item.product_name + item.qty">
+                                <div class="text-xs text-slate-600">
+                                    <span class="font-semibold" x-text="item.qty + '× ' + item.product_name + (item.variant_name ? ' · ' + item.variant_name : '')"></span>
+                                    <template x-if="item.modifiers">
+                                        <span class="text-slate-400" x-text="' (' + item.modifiers + ')'"></span>
+                                    </template>
+                                    <template x-if="item.notes">
+                                        <span class="text-slate-400 italic" x-text="' — ' + item.notes"></span>
+                                    </template>
+                                </div>
+                            </template>
+                        </div>
+                        <template x-if="order.notes">
+                            <p class="text-xs text-slate-400 italic mb-2" x-text="'Catatan: ' + order.notes"></p>
+                        </template>
+                        {{-- Payment method badge --}}
+                        <template x-if="order.preferred_payment">
+                            <p class="text-xs mb-2">
+                                <span :class="order.preferred_payment === 'qris' ? 'bg-blue-100 text-blue-700' : 'bg-green-100 text-green-700'"
+                                      class="px-2 py-0.5 rounded-full font-semibold"
+                                      x-text="order.preferred_payment === 'qris' ? '📱 QRIS' : '💵 Tunai'">
+                                </span>
+                            </p>
+                        </template>
+                        <div class="flex gap-2">
+                            <button @click="openPaymentConfirm(order)"
+                                    class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold py-2 rounded-xl transition-colors">
+                                ✓ Konfirmasi Bayar
+                            </button>
+                            <button @click="openRejectConfirm(order.id)"
+                                    class="flex-1 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold py-2 rounded-xl transition-colors">
+                                ✗ Tolak
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </div>
+
+    {{-- Payment Confirmation Modal (for incoming QR orders) --}}
+    <div x-show="showPaymentConfirm" x-cloak
+         class="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click.self="showPaymentConfirm = false">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm" @click.stop>
+            <div class="flex items-center justify-between p-5 border-b border-slate-100">
+                <h3 class="font-bold text-slate-800">Konfirmasi Pembayaran</h3>
+                <button @click="showPaymentConfirm = false" class="text-slate-400 hover:text-slate-600">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                    </svg>
+                </button>
+            </div>
+            <div class="p-5 space-y-4" x-show="confirmOrder">
+                {{-- Order summary --}}
+                <div class="bg-slate-50 rounded-xl p-3 text-xs space-y-1">
+                    <div class="flex justify-between font-semibold text-slate-700">
+                        <span x-text="confirmOrder?.table_name"></span>
+                        <span x-text="confirmOrder?.customer_name"></span>
+                    </div>
+                    <template x-for="item in (confirmOrder?.items || [])" :key="item.product_name">
+                        <div class="text-slate-500" x-text="item.qty + '× ' + item.product_name + (item.variant_name ? ' · ' + item.variant_name : '')"></div>
+                    </template>
+                    <div class="flex justify-between font-black text-amber-600 pt-1 border-t border-slate-200">
+                        <span>Total</span>
+                        <span x-text="'Rp ' + formatNumber(confirmOrder?.total)"></span>
+                    </div>
+                </div>
+
+                {{-- Payment method --}}
+                <div>
+                    <p class="text-xs font-semibold text-slate-600 mb-2">Metode Pembayaran</p>
+                    <div class="flex gap-2">
+                        <button type="button" @click="confirmPayMethod = 'cash'"
+                                :class="confirmPayMethod === 'cash' ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-slate-200 text-slate-600'"
+                                class="flex-1 border-2 rounded-xl py-2 text-xs font-semibold transition-colors">
+                            💵 Tunai
+                        </button>
+                        <button type="button" @click="confirmPayMethod = 'qris'"
+                                :class="confirmPayMethod === 'qris' ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-slate-200 text-slate-600'"
+                                class="flex-1 border-2 rounded-xl py-2 text-xs font-semibold transition-colors">
+                            📱 QRIS
+                        </button>
+                        <button type="button" @click="confirmPayMethod = 'transfer'"
+                                :class="confirmPayMethod === 'transfer' ? 'border-amber-400 bg-amber-50 text-amber-700' : 'border-slate-200 text-slate-600'"
+                                class="flex-1 border-2 rounded-xl py-2 text-xs font-semibold transition-colors">
+                            🏦 Transfer
+                        </button>
+                    </div>
+                </div>
+
+                {{-- Cash: paid amount --}}
+                <div x-show="confirmPayMethod === 'cash'">
+                    <label class="text-xs font-semibold text-slate-700 mb-1 block">Uang Diterima</label>
+                    <input type="number" x-model="confirmPaidAmount" min="0" placeholder="0"
+                           class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-amber-500">
+                    <div x-show="confirmPaidAmount >= (confirmOrder?.total || 0) && (confirmOrder?.total || 0) > 0"
+                         class="mt-2 bg-emerald-50 rounded-xl p-2 flex justify-between text-xs">
+                        <span class="text-emerald-700 font-medium">Kembalian</span>
+                        <span class="font-black text-emerald-600" x-text="'Rp ' + formatNumber(Math.max(0, confirmPaidAmount - (confirmOrder?.total || 0)))"></span>
+                    </div>
+                </div>
+
+                {{-- Non-cash: reference --}}
+                <div x-show="confirmPayMethod !== 'cash'">
+                    <label class="text-xs font-semibold text-slate-700 mb-1 block">No. Referensi (opsional)</label>
+                    <input type="text" x-model="confirmRef" placeholder="ID transaksi / approval code"
+                           class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-amber-500">
+                </div>
+
+                <button @click="confirmPayment()"
+                        :disabled="confirmProcessing || (confirmPayMethod === 'cash' && parseFloat(confirmPaidAmount || 0) < (confirmOrder?.total || 0))"
+                        :class="(confirmProcessing || (confirmPayMethod === 'cash' && parseFloat(confirmPaidAmount || 0) < (confirmOrder?.total || 0)))
+                            ? 'bg-slate-200 text-slate-400 cursor-not-allowed'
+                            : 'bg-emerald-500 hover:bg-emerald-600 text-white'"
+                        class="w-full py-3 rounded-2xl font-bold text-sm transition-colors">
+                    <span x-text="confirmProcessing ? 'Memproses...' : 'Konfirmasi Pembayaran Diterima'"></span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Reject Confirm Modal --}}
+    <div x-show="showRejectConfirm" x-cloak
+         class="fixed inset-0 z-70 flex items-center justify-center p-4 bg-black/60"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0"
+         x-transition:enter-end="opacity-100"
+         x-transition:leave="transition ease-in duration-100"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0"
+         @click.self="showRejectConfirm = false">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xs" @click.stop>
+            <div class="p-6 text-center">
+                <div class="text-4xl mb-3">⚠️</div>
+                <h3 class="font-black text-slate-800 text-base mb-1">Tolak Pesanan?</h3>
+                <p class="text-sm text-slate-500 mb-5">Pesanan akan dibatalkan dan tidak bisa dikembalikan.</p>
+                <div class="flex gap-3">
+                    <button @click="showRejectConfirm = false"
+                            class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-2.5 rounded-2xl text-sm transition-colors">
+                        Batal
+                    </button>
+                    <button @click="confirmReject()"
+                            :disabled="rejectProcessing"
+                            :class="rejectProcessing ? 'bg-slate-200 text-slate-400 cursor-not-allowed' : 'bg-red-500 hover:bg-red-600 text-white'"
+                            class="flex-1 font-bold py-2.5 rounded-2xl text-sm transition-colors">
+                        <span x-text="rejectProcessing ? 'Menolak...' : 'Ya, Tolak'"></span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Transaction Success Modal --}}
+    <div x-show="showSuccessModal" x-cloak
+         class="fixed inset-0 z-80 flex items-center justify-center bg-black/60 p-4"
+         x-transition:enter="transition ease-out duration-150"
+         x-transition:enter-start="opacity-0 scale-95"
+         x-transition:enter-end="opacity-100 scale-100">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xs p-7 text-center">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                </svg>
+            </div>
+            <h2 class="text-xl font-black text-slate-800 mb-1">Transaksi Berhasil</h2>
+            <p class="text-sm text-slate-500 mb-1" x-show="successInvoice">
+                Invoice: <span class="font-mono font-semibold text-slate-700" x-text="successInvoice"></span>
+            </p>
+            <p class="text-xs text-slate-400 mb-6">Pembayaran telah dikonfirmasi.</p>
+            <div class="flex gap-3">
+                <button @click="printReceipt(successOrderId)"
+                        :disabled="printing"
+                        class="flex-1 border-2 border-amber-400 text-amber-600 hover:bg-amber-50 disabled:opacity-60 font-semibold py-2.5 rounded-2xl text-sm transition-colors flex items-center justify-center gap-2">
+                    <svg x-show="printing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                    <span x-text="printing ? 'Mencetak...' : '🖨️ Cetak Struk'"></span>
+                </button>
+                <button @click="showSuccessModal = false; successOrderId = null; successInvoice = null"
+                        class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 rounded-2xl text-sm transition-colors">
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+
+    {{-- Ready Orders Toast --}}
+    <div x-show="readyOrders.length > 0" x-cloak
+         class="fixed bottom-4 right-4 z-[70] w-80 space-y-2 pointer-events-none">
+        <template x-for="order in readyOrders" :key="order.id">
+            <div class="bg-emerald-600 text-white rounded-2xl shadow-2xl px-4 py-3 flex items-center gap-3 pointer-events-auto"
+                 x-transition:enter="transition ease-out duration-200"
+                 x-transition:enter-start="opacity-0 translate-y-4"
+                 x-transition:enter-end="opacity-100 translate-y-0">
+                <span class="text-2xl shrink-0">🛎️</span>
+                <div class="flex-1 min-w-0">
+                    <p class="font-black text-sm leading-tight">Siap Diantarkan!</p>
+                    <p class="text-emerald-100 text-xs truncate" x-text="order.table_name + (order.customer_name ? ' · ' + order.customer_name : '')"></p>
+                </div>
+                <button @click="markDelivered(order.id)"
+                        class="bg-white/20 hover:bg-white/30 text-white text-xs font-bold px-2.5 py-1.5 rounded-xl shrink-0 transition-colors">
+                    Diantar ✓
+                </button>
+            </div>
+        </template>
+    </div>
+
 </div>
 
 <script>
@@ -374,8 +668,28 @@ function posApp() {
         products: [],
         categories: [],
         loading: true,
-        activeCategory: null,
         search: '',
+
+        // Incoming QR orders
+        showIncoming: false,
+        incomingOrders: [],
+        _pollTimer: null,
+
+        // Ready orders (kitchen done)
+        readyOrders: [],
+
+        // Payment confirm modal
+        showPaymentConfirm: false,
+        confirmOrder: null,
+        confirmPayMethod: 'cash',
+        confirmPaidAmount: 0,
+        confirmRef: '',
+        confirmProcessing: false,
+
+        // Reject confirm modal
+        showRejectConfirm: false,
+        rejectTargetId: null,
+        rejectProcessing: false,
 
         // Cart
         cart: [],
@@ -401,13 +715,36 @@ function posApp() {
         paymentRef: '',
         processing: false,
 
+        // Success modal
+        showSuccessModal: false,
+        successInvoice: null,
+        successOrderId: null,
+        printing: false,
+
         // Computed
         get filteredProducts() {
-            return this.products.filter(p => {
-                const matchCat = !this.activeCategory || p.category_id == this.activeCategory;
-                const matchSearch = !this.search || p.name.toLowerCase().includes(this.search.toLowerCase());
-                return matchCat && matchSearch;
-            });
+            const q = this.search.toLowerCase();
+            return this.products.filter(p => p.name.toLowerCase().includes(q));
+        },
+
+        get productsByCategory() {
+            const map = new Map();
+            for (const cat of this.categories) {
+                map.set(cat.id, { category_id: cat.id, name: cat.name, icon: cat.icon || '', products: [] });
+            }
+            // uncategorised bucket
+            map.set(null, { category_id: null, name: 'Lainnya', icon: '📦', products: [] });
+
+            for (const p of this.products) {
+                const key = p.category_id ?? null;
+                if (map.has(key)) {
+                    map.get(key).products.push(p);
+                } else {
+                    map.get(null).products.push(p);
+                }
+            }
+
+            return [...map.values()].filter(g => g.products.length > 0);
         },
 
         get subtotal() {
@@ -427,6 +764,137 @@ function posApp() {
         },
 
         // Methods
+        init() {
+            this.loadProducts();
+            this.pollIncoming();
+            this.pollReady();
+            this._pollTimer = setInterval(() => { this.pollIncoming(); this.pollReady(); }, 15000);
+
+            // Button in top bar shows/hides based on POS page
+            const btn = document.getElementById('btn-incoming');
+            if (btn) btn.classList.remove('hidden');
+
+            // Listen for top-bar button click
+            document.addEventListener('open-incoming', () => { this.showIncoming = true; });
+
+            this.$watch('incomingOrders', (orders) => {
+                const badge = document.getElementById('incoming-badge');
+                const btn   = document.getElementById('btn-incoming');
+                if (!badge || !btn) return;
+                if (orders.length > 0) {
+                    badge.textContent = orders.length;
+                    badge.classList.remove('hidden');
+                    badge.style.display = 'flex';
+                    btn.classList.add('text-amber-200');
+                } else {
+                    badge.classList.add('hidden');
+                    badge.style.display = '';
+                    btn.classList.remove('text-amber-200');
+                    // Auto-close panel when no more orders
+                    this.showIncoming = false;
+                }
+            });
+        },
+
+        async pollIncoming() {
+            try {
+                const res = await fetch('/pos/orders/incoming', { headers: { 'Accept': 'application/json' } });
+                if (res.ok) {
+                    const data = await res.json();
+                    const prev = this.incomingOrders.length;
+                    this.incomingOrders = data.orders;
+                    // Auto-open panel when new order arrives
+                    if (data.orders.length > prev) this.showIncoming = true;
+                }
+            } catch (_) {}
+        },
+
+        openPaymentConfirm(order) {
+            this.confirmOrder       = order;
+            this.confirmPayMethod   = order.preferred_payment || 'cash';
+            this.confirmPaidAmount  = order.total;
+            this.confirmRef         = '';
+            this.confirmProcessing  = false;
+            this.showPaymentConfirm = true;
+        },
+
+        async confirmPayment() {
+            if (!this.confirmOrder || this.confirmProcessing) return;
+            if (this.confirmPayMethod === 'cash' && parseFloat(this.confirmPaidAmount || 0) < this.confirmOrder.total) return;
+
+            this.confirmProcessing = true;
+            const csrf = document.querySelector('meta[name=csrf-token]').content;
+
+            try {
+                const res = await fetch(`/pos/orders/${this.confirmOrder.id}/accept`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrf, 'Accept': 'application/json' },
+                    body: JSON.stringify({
+                        payment_method: this.confirmPayMethod,
+                        paid_amount:    parseFloat(this.confirmPaidAmount || this.confirmOrder.total),
+                        reference:      this.confirmRef || null,
+                    }),
+                });
+                if (res.ok) {
+                    this.incomingOrders = this.incomingOrders.filter(o => o.id !== this.confirmOrder.id);
+                    this.showPaymentConfirm = false;
+                    this.confirmOrder = null;
+                } else {
+                    const d = await res.json();
+                    alert(d.message || 'Gagal konfirmasi.');
+                }
+            } catch (_) {
+                alert('Gagal terhubung ke server.');
+            }
+            this.confirmProcessing = false;
+        },
+
+        async pollReady() {
+            try {
+                const res = await fetch('/pos/orders/ready', { headers: { 'Accept': 'application/json' } });
+                if (res.ok) {
+                    const data = await res.json();
+                    this.readyOrders = data.orders;
+                }
+            } catch (_) {}
+        },
+
+        async markDelivered(orderId) {
+            try {
+                await fetch(`/kitchen/orders/${orderId}/status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ kitchen_status: 'delivered' }),
+                });
+                this.readyOrders = this.readyOrders.filter(o => o.id !== orderId);
+            } catch (_) {}
+        },
+
+        openRejectConfirm(orderId) {
+            this.rejectTargetId   = orderId;
+            this.rejectProcessing = false;
+            this.showRejectConfirm = true;
+        },
+
+        async confirmReject() {
+            if (!this.rejectTargetId || this.rejectProcessing) return;
+            this.rejectProcessing = true;
+            try {
+                await fetch(`/pos/orders/${this.rejectTargetId}/reject`, {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content, 'Accept': 'application/json' },
+                });
+                this.incomingOrders = this.incomingOrders.filter(o => o.id !== this.rejectTargetId);
+                this.showRejectConfirm = false;
+                this.rejectTargetId   = null;
+            } catch (_) {}
+            this.rejectProcessing = false;
+        },
+
         async loadProducts() {
             this.loading = true;
             try {
@@ -595,15 +1063,47 @@ function posApp() {
 
                 const data = await res.json();
                 if (res.ok) {
-                    window.location.href = `/pos/orders/${data.order_id}/receipt`;
+                    this.successOrderId = data.order_id;
+                    this.successInvoice = data.invoice_no;
+                    this.showPayment     = false;
+                    this.showSuccessModal = true;
+                    // Reset cart
+                    this.cart          = [];
+                    this.tableId       = '';
+                    this.customerId    = '';
+                    this.customerName  = '';
+                    this.notes         = '';
+                    this.discountAmount = 0;
+                    this.paidAmount    = 0;
+                    this.paymentRef    = '';
+                    this.voucherCode   = '';
                 } else {
-                    alert(data.message || JSON.stringify(data.errors || 'Terjadi kesalahan'));
+                    const msg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'Terjadi kesalahan.');
+                    alert(msg);
                 }
             } catch (e) {
                 alert('Gagal memproses pembayaran. Periksa koneksi internet.');
             }
 
             this.processing = false;
+        },
+
+        printReceipt(orderId) {
+            this.printing = true;
+            const iframe = document.createElement('iframe');
+            iframe.setAttribute('aria-hidden', 'true');
+            iframe.style.cssText = 'display:none;';
+            iframe.src = `/pos/orders/${orderId}/receipt`;
+            document.body.appendChild(iframe);
+            iframe.addEventListener('load', () => {
+                iframe.contentWindow.print();
+                const done = () => {
+                    iframe.remove();
+                    this.printing = false;
+                    window.removeEventListener('focus', done);
+                };
+                window.addEventListener('focus', done, { once: true });
+            });
         },
 
         formatNumber(n) {

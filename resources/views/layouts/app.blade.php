@@ -8,11 +8,11 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     @stack('styles')
 </head>
-<body class="bg-slate-100 min-h-screen">
+<body class="bg-slate-100 h-screen overflow-hidden">
 
-<div class="flex min-h-screen">
-    {{-- Sidebar --}}
-    <aside class="w-64 bg-amber-900 text-white flex-col shrink-0 hidden lg:flex">
+<div class="flex h-screen">
+    {{-- Sidebar (fixed height, own scroll) --}}
+    <aside class="w-64 bg-amber-900 text-white flex-col shrink-0 hidden lg:flex h-screen overflow-y-auto">
         @include('layouts.partials.sidebar')
     </aside>
 
@@ -24,10 +24,10 @@
         @include('layouts.partials.sidebar')
     </aside>
 
-    {{-- Main --}}
-    <div class="flex-1 flex flex-col min-w-0">
+    {{-- Main (own scroll) --}}
+    <div class="flex-1 flex flex-col min-w-0 h-screen overflow-hidden">
         {{-- Topbar --}}
-        <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 sticky top-0 z-10">
+        <header class="bg-white border-b border-slate-200 px-4 py-3 flex items-center gap-3 shrink-0 z-10">
             <button @click="sidebarOpen=!sidebarOpen" class="lg:hidden text-slate-400 hover:text-slate-600">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
@@ -50,8 +50,8 @@
             @endif
         </header>
 
-        {{-- Content --}}
-        <main class="flex-1 p-6 @yield('main-class')">
+        {{-- Content (scrollable independently) --}}
+        <main class="flex-1 overflow-y-auto p-6 @yield('main-class')">
             @if(session('success'))
             <div class="mb-4 bg-emerald-50 border border-emerald-200 rounded-2xl px-4 py-3 text-sm text-emerald-700">
                 {{ session('success') }}
