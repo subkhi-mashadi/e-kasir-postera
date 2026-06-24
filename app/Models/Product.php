@@ -6,6 +6,7 @@ use App\Traits\BelongsToCompany;
 use Illuminate\Database\Eloquent\Model;
 use Spatie\MediaLibrary\HasMedia;
 use Spatie\MediaLibrary\InteractsWithMedia;
+use Spatie\MediaLibrary\MediaCollections\Models\Media;
 
 class Product extends Model implements HasMedia
 {
@@ -48,5 +49,21 @@ class Product extends Model implements HasMedia
     public function inventory(int $branchId)
     {
         return $this->inventories()->where('branch_id', $branchId)->first();
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('images')->singleFile();
+    }
+
+    public function registerMediaConversions(?Media $media = null): void
+    {
+        $this->addMediaConversion('thumb')
+            ->width(600)->height(600)->nonQueued();
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->getFirstMediaUrl('images') ?: null;
     }
 }

@@ -11,7 +11,7 @@ class Order extends Model
     use BelongsToCompany;
 
     protected $fillable = [
-        'uuid', 'company_id', 'branch_id', 'user_id', 'customer_id', 'table_id',
+        'uuid', 'company_id', 'branch_id', 'user_id', 'customer_id', 'customer_name', 'table_id',
         'invoice_no', 'type', 'source', 'status',
         'subtotal', 'discount_amount', 'tax_amount', 'total',
         'paid_amount', 'change_amount', 'points_earned', 'points_used',

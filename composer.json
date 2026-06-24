@@ -11,6 +11,7 @@
         "laravel/framework": "^13.8",
         "laravel/tinker": "^3.0",
         "midtrans/midtrans-php": "*",
+        "simplesoftwareio/simple-qrcode": "*",
         "spatie/laravel-medialibrary": "*",
         "spatie/laravel-permission": "*"
     },
