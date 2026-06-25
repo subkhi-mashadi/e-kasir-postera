@@ -22,19 +22,19 @@
 <div class="bg-white rounded-2xl p-6 shadow-sm">
     <h2 class="font-semibold text-slate-700 mb-4">Akses Cepat</h2>
     <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        <a href="#" class="border border-slate-200 rounded-2xl p-4 text-center hover:border-amber-400 hover:bg-amber-50 transition-colors">
+        <a href="{{ route('pos.index') }}" class="border border-slate-200 rounded-2xl p-4 text-center hover:border-amber-400 hover:bg-amber-50 transition-colors">
             <div class="text-2xl mb-2">🛒</div>
             <div class="text-sm font-medium text-slate-700">Kasir (POS)</div>
         </a>
-        <a href="#" class="border border-slate-200 rounded-2xl p-4 text-center hover:border-amber-400 hover:bg-amber-50 transition-colors">
+        <a href="{{ route('app.products.index') }}" class="border border-slate-200 rounded-2xl p-4 text-center hover:border-amber-400 hover:bg-amber-50 transition-colors">
             <div class="text-2xl mb-2">📦</div>
             <div class="text-sm font-medium text-slate-700">Produk</div>
         </a>
-        <a href="#" class="border border-slate-200 rounded-2xl p-4 text-center hover:border-amber-400 hover:bg-amber-50 transition-colors">
+        <a href="{{ route('app.reports.sales') }}" class="border border-slate-200 rounded-2xl p-4 text-center hover:border-amber-400 hover:bg-amber-50 transition-colors">
             <div class="text-2xl mb-2">📊</div>
             <div class="text-sm font-medium text-slate-700">Laporan</div>
         </a>
-        <a href="#" class="border border-slate-200 rounded-2xl p-4 text-center hover:border-amber-400 hover:bg-amber-50 transition-colors">
+        <a href="{{ route('subscription.billing') }}" class="border border-slate-200 rounded-2xl p-4 text-center hover:border-amber-400 hover:bg-amber-50 transition-colors">
             <div class="text-2xl mb-2">⚙️</div>
             <div class="text-sm font-medium text-slate-700">Pengaturan</div>
         </a>

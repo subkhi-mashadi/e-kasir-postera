@@ -117,6 +117,13 @@ $linkClass = fn($pattern) => 'flex items-center gap-3 px-3 py-2 rounded-xl text-
         Laporan Penjualan
     </a>
 
+    <a href="{{ route('app.reports.per-kasir') }}" class="{{ $linkClass('app.reports.per-kasir') }}">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+        </svg>
+        Laporan Per Kasir
+    </a>
+
 </nav>
 
 {{-- Footer --}}
@@ -146,6 +153,21 @@ $linkClass = fn($pattern) => 'flex items-center gap-3 px-3 py-2 rounded-xl text-
             @endforeach
         </div>
     </div>
+    @endif
+
+    @php $sub = auth()->user()->company?->subscription; @endphp
+    @if ($sub && $sub->status === 'trial')
+    <a href="{{ route('subscription.billing') }}"
+       class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-amber-200/60 hover:bg-amber-800/50 w-full transition-colors">
+        <span class="w-2 h-2 rounded-full bg-amber-400 shrink-0"></span>
+        Trial — berakhir {{ $sub->trial_ends_at?->diffForHumans() }}
+    </a>
+    @elseif ($sub && $sub->status === 'expired')
+    <a href="{{ route('subscription.billing') }}"
+       class="flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-red-300 hover:bg-red-900/30 w-full transition-colors">
+        <span class="w-2 h-2 rounded-full bg-red-400 shrink-0"></span>
+        Langganan Berakhir
+    </a>
     @endif
 
     <form method="POST" action="{{ route('logout') }}">

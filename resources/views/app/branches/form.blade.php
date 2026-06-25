@@ -7,7 +7,7 @@
     <a href="{{ route('app.branches.index') }}" class="text-slate-500 hover:text-slate-700 text-sm">&larr; Kembali</a>
 </div>
 
-<div class="bg-white rounded-2xl shadow-sm p-6 max-w-lg">
+<div class="bg-white rounded-2xl shadow-sm p-6">
     <h2 class="text-base font-semibold text-slate-800 mb-5">
         {{ isset($branch) ? 'Edit Cabang' : 'Tambah Cabang Baru' }}
     </h2>

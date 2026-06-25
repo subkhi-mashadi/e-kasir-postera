@@ -287,24 +287,38 @@ Semua endpoint POS discope `company_id`/`branch_id` user.
 
 - **Milestone:** ✅ Pesan dari HP pelanggan → muncul di kasir & dapur → dapur proses → kasir antar.
 
-### Fase 4 — PWA & Offline Sync (4–6 hari) ⚠️ paling kompleks
-- Manifest + service worker (Workbox), installable.
-- IndexedDB (Dexie): cache katalog + outbox order.
-- Refactor POS jadi offline-first (tulis lokal dulu).
-- Endpoint `/api/sync/orders` idempotent + resolusi konflik + indikator sync.
-- **Milestone:** matikan internet → transaksi tetap jalan → online → tersinkron.
+### Fase 4 — PWA & Offline Sync ✅ SELESAI
+- ✅ Manifest + service worker (Workbox via `vite-plugin-pwa`), installable di Chrome/Safari.
+- ✅ IndexedDB (Dexie): cache katalog produk + outbox order (`db.js`, `sync.js`).
+- ✅ POS offline-first: `loadProducts()` fallback Dexie, `checkout()` queue ke outbox saat offline.
+- ✅ Endpoint `POST /api/sync/orders` idempotent by `sync_uuid` (`SyncOrderController`).
+- ✅ Indikator sync di POS: badge "Offline" (orange) + "Sync N" (blue spinner) saat ada pending.
+- ✅ Icon PWA 192×192 + 512×512 PNG.
+- **Milestone:** ✅ Matikan internet → transaksi tetap jalan → online → tersinkron otomatis.
 
-### Fase 5 — SaaS & Billing (3–5 hari)
-- Filament panel super admin: plans, subscriptions, invoices, widgets.
-- Integrasi Midtrans (checkout langganan + webhook).
-- Enforcement limit paket + kunci tenant kedaluwarsa (cron).
-- **Milestone:** owner berlangganan & bayar; super admin kelola semua.
+### Fase 5 — SaaS & Billing ✅ SELESAI
+- ✅ Filament panel super admin: `PlanResource`, `CompanyResource`, `SubscriptionResource`, `SubscriptionInvoiceResource`.
+- ✅ Dashboard widgets: `SaasStatsWidget` (tenant aktif, trial, MRR, expired) + `RecentSubscriptionsWidget`.
+- ✅ Paket default: Starter / Pro / Enterprise (seeder idempotent).
+- ✅ Owner billing page `/subscription/billing` — pilih paket + periode → Midtrans Snap checkout.
+- ✅ Webhook Midtrans untuk subscription invoice (`sub-*` order ID).
+- ✅ `SubscriptionService`: createTrial, createCheckout, activateFromInvoice, checkAndExpire.
+- ✅ Enforcement limit: canAddBranch(), canAddUser(), canAddProduct() di Company model.
+- ✅ Cron harian `subscriptions:expire` (dijadwal di `routes/console.php`).
+- **Milestone:** ✅ Owner pilih paket → bayar → aktif; super admin kelola semua tenant.
 
-### Fase 6 — Laporan & Polish (2–4 hari)
-- Laporan penjualan/laba/per-cabang + export Excel/PDF.
-- Transfer stok antar cabang, supplier/PO (opsional).
-- Hardening keamanan, optimasi, testing (Pest), dokumentasi.
-- **Milestone:** rilis kandidat.
+### Fase 6 — Laporan & Polish ✅ SELESAI
+- ✅ Export Excel laporan penjualan (`SalesReportExport` 3 sheet: Ringkasan, Per Hari, Top Produk).
+- ✅ Export PDF laporan penjualan (DomPDF, A4 portrait, inline style).
+- ✅ Tombol Export Excel + PDF di halaman laporan penjualan.
+- ✅ Laporan per kasir `/app/reports/per-kasir` — groupBy user_id, tabel rank + pendapatan.
+- ✅ Dashboard quick-access links diperbaiki (bukan `href="#"` lagi).
+- ✅ Sidebar subscription badge: trial (amber) + expired (red) + link ke billing.
+- ✅ Sidebar link "Laporan Per Kasir".
+- ✅ Rate limit: login `throttle:10,1`, QR submit `throttle:20,1`.
+- ✅ Auto-create trial subscription saat Company dibuat (`Company::booted()`).
+- ✅ Filament panel dibatasi hanya `super_admin` via `canAccessPanel()` di User model.
+- **Milestone:** ✅ Semua fitur MVP selesai — export, laporan, keamanan dasar, trial otomatis.
 
 ---
 

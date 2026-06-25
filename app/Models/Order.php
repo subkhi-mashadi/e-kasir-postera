@@ -16,7 +16,7 @@ class Order extends Model
         'type', 'source', 'preferred_payment', 'kitchen_status', 'status',
         'subtotal', 'discount_amount', 'tax_amount', 'total',
         'paid_amount', 'change_amount', 'points_earned', 'points_used',
-        'notes', 'synced_at', 'created_offline_at',
+        'notes', 'sync_uuid', 'synced_at', 'created_offline_at',
     ];
 
     protected $casts = [

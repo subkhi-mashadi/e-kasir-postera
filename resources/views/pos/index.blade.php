@@ -2,17 +2,36 @@
 @section('title', 'Kasir')
 
 @section('content')
-<div class="flex h-[calc(100vh-3rem)] overflow-hidden"
+<div class="flex flex-1 min-h-0 overflow-hidden"
      x-data="posApp()"
      x-init="init()">
 
     {{-- LEFT: Product Browser --}}
     <div class="flex flex-col flex-1 min-w-0 overflow-hidden">
 
-        {{-- Search bar --}}
-        <div class="bg-white border-b border-slate-100 px-4 py-3 shrink-0">
+        {{-- Search bar + sync status --}}
+        <div class="bg-white border-b border-slate-100 px-4 py-3 shrink-0 flex items-center gap-2">
             <input type="text" x-model="search" placeholder="Cari produk..."
-                   class="w-full border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-amber-500 bg-slate-50">
+                   class="flex-1 border border-slate-200 rounded-xl px-4 py-2 text-sm outline-none focus:border-amber-500 bg-slate-50">
+            {{-- Online/Offline badge --}}
+            <template x-if="!isOnline">
+                <span class="shrink-0 text-xs font-semibold bg-orange-100 text-orange-600 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                    <span class="w-1.5 h-1.5 rounded-full bg-orange-500 inline-block"></span>
+                    Offline
+                    <template x-if="pendingSyncCount > 0">
+                        <span class="bg-orange-500 text-white text-xs px-1.5 py-0.5 rounded-full" x-text="pendingSyncCount"></span>
+                    </template>
+                </span>
+            </template>
+            <template x-if="isOnline && pendingSyncCount > 0">
+                <span class="shrink-0 text-xs font-semibold bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg flex items-center gap-1">
+                    <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                    </svg>
+                    Sync <span x-text="pendingSyncCount"></span>
+                </span>
+            </template>
         </div>
 
         {{-- Product area --}}
@@ -113,7 +132,7 @@
     </div>
 
     {{-- RIGHT: Cart --}}
-    <div class="w-80 xl:w-96 flex flex-col bg-white border-l border-slate-100 shrink-0">
+    <div class="w-80 xl:w-96 flex flex-col bg-white border-l border-slate-100 shrink-0 overflow-hidden">
 
         {{-- Order type & table --}}
         <div class="px-4 py-3 border-b border-slate-100 space-y-2 shrink-0">
@@ -231,9 +250,10 @@
          x-transition:leave="transition ease-in duration-100"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm overflow-y-auto max-h-[90vh]" @click.stop>
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm flex flex-col max-h-[90svh]" @click.stop>
 
-            <div class="flex items-center justify-between p-5 border-b border-slate-100">
+            {{-- Header sticky --}}
+            <div class="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
                 <div>
                     <h3 class="font-bold text-slate-800" x-text="selectedProduct?.name"></h3>
                     <p class="text-sm text-amber-600 font-semibold" x-text="'Rp ' + formatNumber(itemTotalPrice())"></p>
@@ -245,7 +265,8 @@
                 </button>
             </div>
 
-            <div class="p-5 space-y-4">
+            {{-- Scrollable body --}}
+            <div class="flex-1 overflow-y-auto p-5 space-y-4 min-h-0">
                 {{-- Variants --}}
                 <template x-if="selectedProduct?.variants?.length > 0">
                     <div>
@@ -299,7 +320,10 @@
                     <input type="text" x-model="itemNotes" placeholder="Opsional (mis: pedas extra)"
                            class="w-full border border-slate-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-amber-500">
                 </div>
+            </div>
 
+            {{-- Footer sticky --}}
+            <div class="shrink-0 p-5 border-t border-slate-100">
                 <button @click="confirmAddToCart()"
                         class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-2xl text-sm transition-colors">
                     Tambah ke Keranjang · <span x-text="'Rp ' + formatNumber(itemTotalPrice() * itemQty)"></span>
@@ -317,8 +341,8 @@
          x-transition:leave="transition ease-in duration-100"
          x-transition:leave-start="opacity-100"
          x-transition:leave-end="opacity-0">
-        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl" @click.stop>
-            <div class="flex items-center justify-between p-5 border-b border-slate-100">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-xl flex flex-col max-h-[90svh]" @click.stop>
+            <div class="flex items-center justify-between p-5 border-b border-slate-100 shrink-0">
                 <h3 class="font-bold text-slate-800">Pembayaran</h3>
                 <button @click="showPayment = false" class="text-slate-400 hover:text-slate-600">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -327,7 +351,7 @@
                 </button>
             </div>
 
-            <div class="p-5 space-y-4">
+            <div class="flex-1 overflow-y-auto min-h-0 p-5 space-y-4">
                 {{-- Diskon --}}
                 <div>
                     <label class="text-xs font-semibold text-slate-700 mb-1 block">Diskon (Rp)</label>
@@ -389,6 +413,9 @@
                     </div>
                 </div>
 
+            </div>
+
+            <div class="shrink-0 p-5 border-t border-slate-100">
                 <button @click="checkout()"
                         :disabled="processing || (paymentMethod === 'cash' && paidAmount < total)"
                         :class="(processing || (paymentMethod === 'cash' && paidAmount < total))
@@ -610,31 +637,53 @@
          x-transition:enter-start="opacity-0 scale-95"
          x-transition:enter-end="opacity-100 scale-100">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xs p-7 text-center">
-            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
-                </svg>
-            </div>
-            <h2 class="text-xl font-black text-slate-800 mb-1">Transaksi Berhasil</h2>
-            <p class="text-sm text-slate-500 mb-1" x-show="successInvoice">
-                Invoice: <span class="font-mono font-semibold text-slate-700" x-text="successInvoice"></span>
-            </p>
-            <p class="text-xs text-slate-400 mb-6">Pembayaran telah dikonfirmasi.</p>
-            <div class="flex gap-3">
-                <button @click="printReceipt(successOrderId)"
-                        :disabled="printing"
-                        class="flex-1 border-2 border-amber-400 text-amber-600 hover:bg-amber-50 disabled:opacity-60 font-semibold py-2.5 rounded-2xl text-sm transition-colors flex items-center justify-center gap-2">
-                    <svg x-show="printing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
-                    </svg>
-                    <span x-text="printing ? 'Mencetak...' : '🖨️ Cetak Struk'"></span>
-                </button>
-                <button @click="showSuccessModal = false; successOrderId = null; successInvoice = null"
-                        class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 rounded-2xl text-sm transition-colors">
-                    Tutup
-                </button>
-            </div>
+            {{-- Online success --}}
+            <template x-if="successOrderId">
+                <div>
+                    <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-black text-slate-800 mb-1">Transaksi Berhasil</h2>
+                    <p class="text-sm text-slate-500 mb-1" x-show="successInvoice">
+                        Invoice: <span class="font-mono font-semibold text-slate-700" x-text="successInvoice"></span>
+                    </p>
+                    <p class="text-xs text-slate-400 mb-6">Pembayaran telah dikonfirmasi.</p>
+                    <div class="flex gap-3">
+                        <button @click="printReceipt(successOrderId)"
+                                :disabled="printing"
+                                class="flex-1 border-2 border-amber-400 text-amber-600 hover:bg-amber-50 disabled:opacity-60 font-semibold py-2.5 rounded-2xl text-sm transition-colors flex items-center justify-center gap-2">
+                            <svg x-show="printing" class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                            </svg>
+                            <span x-text="printing ? 'Mencetak...' : '🖨️ Cetak Struk'"></span>
+                        </button>
+                        <button @click="showSuccessModal = false; successOrderId = null; successInvoice = null"
+                                class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold py-2.5 rounded-2xl text-sm transition-colors">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </template>
+            {{-- Offline queued --}}
+            <template x-if="!successOrderId">
+                <div>
+                    <div class="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-orange-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/>
+                        </svg>
+                    </div>
+                    <h2 class="text-xl font-black text-slate-800 mb-1">Tersimpan</h2>
+                    <p class="text-sm text-orange-600 font-medium mb-1">Mode Offline</p>
+                    <p class="text-xs text-slate-400 mb-6">Order akan dikirim ke server saat koneksi pulih.</p>
+                    <button @click="showSuccessModal = false"
+                            class="w-full bg-orange-500 hover:bg-orange-600 text-white font-semibold py-2.5 rounded-2xl text-sm transition-colors">
+                        OK
+                    </button>
+                </div>
+            </template>
         </div>
     </div>
 
@@ -721,6 +770,10 @@ function posApp() {
         successOrderId: null,
         printing: false,
 
+        // Offline / sync
+        isOnline: navigator.onLine,
+        pendingSyncCount: 0,
+
         // Computed
         get filteredProducts() {
             const q = this.search.toLowerCase();
@@ -768,7 +821,18 @@ function posApp() {
             this.loadProducts();
             this.pollIncoming();
             this.pollReady();
+            this.updatePendingCount();
             this._pollTimer = setInterval(() => { this.pollIncoming(); this.pollReady(); }, 15000);
+
+            // Offline sync
+            window.addEventListener('online', () => {
+                this.isOnline = true;
+                this.updatePendingCount().then(n => {
+                    if (n > 0 && window.__syncOutbox) window.__syncOutbox();
+                });
+            });
+            window.addEventListener('offline', () => { this.isOnline = false; });
+            window.addEventListener('order-synced', () => { this.updatePendingCount(); });
 
             // Button in top bar shows/hides based on POS page
             const btn = document.getElementById('btn-incoming');
@@ -859,6 +923,11 @@ function posApp() {
             } catch (_) {}
         },
 
+        async updatePendingCount() {
+            this.pendingSyncCount = window.__pendingCount ? await window.__pendingCount() : 0;
+            return this.pendingSyncCount;
+        },
+
         async markDelivered(orderId) {
             try {
                 await fetch(`/kitchen/orders/${orderId}/status`, {
@@ -897,13 +966,35 @@ function posApp() {
 
         async loadProducts() {
             this.loading = true;
+            const db = window.__db;
             try {
-                const res = await fetch('/pos/products');
-                const data = await res.json();
-                this.products = data.products;
-                this.categories = data.categories;
+                if (navigator.onLine) {
+                    const res = await fetch('/pos/products');
+                    const data = await res.json();
+                    this.products   = data.products;
+                    this.categories = data.categories;
+                    // Cache to Dexie for offline use
+                    if (db) {
+                        await db.products.clear();
+                        await db.categories.clear();
+                        await db.products.bulkPut(data.products);
+                        await db.categories.bulkPut(data.categories);
+                    }
+                } else {
+                    // Fallback to Dexie cache
+                    if (db) {
+                        this.products   = await db.products.toArray();
+                        this.categories = await db.categories.toArray();
+                    }
+                }
             } catch (e) {
-                console.error('Gagal memuat produk:', e);
+                // Network error — try Dexie fallback
+                if (db) {
+                    try {
+                        this.products   = await db.products.toArray();
+                        this.categories = await db.categories.toArray();
+                    } catch (_) {}
+                }
             }
             this.loading = false;
         },
@@ -1050,6 +1141,19 @@ function posApp() {
                 })),
             };
 
+            // Offline: queue to Dexie outbox
+            if (!navigator.onLine && window.__queueOrder) {
+                await window.__queueOrder(payload);
+                await this.updatePendingCount();
+                this.successOrderId  = null;
+                this.successInvoice  = null;
+                this.showPayment     = false;
+                this.showSuccessModal = true;
+                this._resetCart();
+                this.processing = false;
+                return;
+            }
+
             try {
                 const res = await fetch('/pos/orders', {
                     method: 'POST',
@@ -1063,29 +1167,42 @@ function posApp() {
 
                 const data = await res.json();
                 if (res.ok) {
-                    this.successOrderId = data.order_id;
-                    this.successInvoice = data.invoice_no;
+                    this.successOrderId  = data.order_id;
+                    this.successInvoice  = data.invoice_no;
                     this.showPayment     = false;
                     this.showSuccessModal = true;
-                    // Reset cart
-                    this.cart          = [];
-                    this.tableId       = '';
-                    this.customerId    = '';
-                    this.customerName  = '';
-                    this.notes         = '';
-                    this.discountAmount = 0;
-                    this.paidAmount    = 0;
-                    this.paymentRef    = '';
-                    this.voucherCode   = '';
+                    this._resetCart();
                 } else {
                     const msg = data.message || (data.errors ? Object.values(data.errors).flat().join('\n') : 'Terjadi kesalahan.');
                     alert(msg);
                 }
             } catch (e) {
-                alert('Gagal memproses pembayaran. Periksa koneksi internet.');
+                // Network error — fall back to offline queue
+                if (window.__queueOrder) {
+                    await window.__queueOrder(payload);
+                    await this.updatePendingCount();
+                    this.successOrderId  = null;
+                    this.successInvoice  = null;
+                    this.showPayment     = false;
+                    this.showSuccessModal = true;
+                    this._resetCart();
+                } else {
+                    alert('Gagal memproses pembayaran. Periksa koneksi internet.');
+                }
             }
 
             this.processing = false;
+        },
+
+        _resetCart() {
+            this.cart           = [];
+            this.tableId        = '';
+            this.customerId     = '';
+            this.customerName   = '';
+            this.notes          = '';
+            this.discountAmount = 0;
+            this.paidAmount     = 0;
+            this.paymentRef     = '';
         },
 
         printReceipt(orderId) {

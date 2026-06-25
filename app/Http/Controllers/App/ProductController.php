@@ -58,6 +58,11 @@ class ProductController extends Controller
             'modifier_groups.*' => 'exists:modifier_groups,id',
         ]);
 
+        $company = auth()->user()->company;
+        if ($company && ! $company->canAddProduct()) {
+            return back()->withErrors(['name' => 'Batas jumlah produk paket Anda telah tercapai. Upgrade paket untuk menambah produk.']);
+        }
+
         $data['track_stock'] = $request->boolean('track_stock', true);
         $data['is_active']   = $request->boolean('is_active', true);
         $data['sku']         = $data['sku'] ?: 'PRD-' . strtoupper(substr(md5(uniqid()), 0, 6));

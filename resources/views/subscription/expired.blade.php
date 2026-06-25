@@ -11,7 +11,7 @@
     <div class="text-6xl mb-4">⏰</div>
     <h1 class="text-2xl font-bold text-slate-800 mb-2">Langganan Berakhir</h1>
     <p class="text-slate-500 mb-6">Masa langganan usaha Anda telah habis. Perpanjang untuk melanjutkan akses.</p>
-    <a href="#" class="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors">
+    <a href="{{ route('subscription.billing') }}" class="inline-block bg-amber-500 hover:bg-amber-600 text-white font-semibold px-6 py-2.5 rounded-xl transition-colors">
         Perpanjang Sekarang
     </a>
     <form method="POST" action="{{ route('logout') }}" class="mt-4">

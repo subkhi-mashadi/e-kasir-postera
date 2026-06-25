@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\SyncOrderController;
+use App\Http\Controllers\Subscription\BillingController;
 use App\Http\Controllers\Auth\BranchSelectController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\App\BranchController;
@@ -24,7 +26,7 @@ Route::get('/', fn () => redirect()->route('login'));
 // ── Auth ──────────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/login', [LoginController::class, 'show'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.post');
+    Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('throttle:10,1');
 });
 
 Route::middleware('auth')->group(function () {
@@ -72,6 +74,9 @@ Route::middleware(['auth', 'tenant.active', 'branch.selected'])
 
         // Reports
         Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
+        Route::get('/reports/sales/export/excel', [ReportController::class, 'exportExcel'])->name('reports.sales.excel');
+        Route::get('/reports/sales/export/pdf',   [ReportController::class, 'exportPdf'])->name('reports.sales.pdf');
+        Route::get('/reports/per-kasir', [ReportController::class, 'perKasir'])->name('reports.per-kasir');
 
         // Customers
         Route::resource('customers', CustomerController::class)->except(['show']);
@@ -96,7 +101,7 @@ Route::middleware(['auth', 'tenant.active', 'branch.selected'])
 
 // ── Public QR ordering (Fase 3) ──────────────────────────────────────────────
 Route::get('/order/{token}', [QrOrderController::class, 'show'])->name('order.show');
-Route::post('/order/{token}/submit', [QrOrderController::class, 'submit'])->name('order.submit');
+Route::post('/order/{token}/submit', [QrOrderController::class, 'submit'])->name('order.submit')->middleware('throttle:20,1');
 Route::get('/order/{token}/history', [QrOrderController::class, 'history'])->name('order.history');
 Route::get('/order/{token}/payment-status/{orderId}', [QrOrderController::class, 'paymentStatus'])->name('order.payment-status');
 Route::get('/order-submitted', fn () => view('order.submitted'))->name('order.submitted');
@@ -114,6 +119,20 @@ Route::middleware(['auth', 'tenant.active', 'branch.selected'])
         Route::post('/orders/{order}/status', [KitchenController::class, 'updateStatus'])->name('orders.status');
     });
 
-// ── Subscription expired ──────────────────────────────────────────────────────
+// ── API sync (PWA offline) ────────────────────────────────────────────────────
+Route::middleware(['auth', 'tenant.active', 'branch.selected'])
+    ->prefix('api/sync')
+    ->name('api.sync.')
+    ->group(function () {
+        Route::post('/orders', [SyncOrderController::class, 'store'])->name('orders');
+    });
+
+// ── Subscription ──────────────────────────────────────────────────────────────
 Route::middleware('auth')->get('/subscription/expired', fn () => view('subscription.expired'))
     ->name('subscription.expired');
+
+Route::middleware('auth')->prefix('subscription')->name('subscription.')->group(function () {
+    Route::get('/billing', [BillingController::class, 'index'])->name('billing');
+    Route::post('/checkout', [BillingController::class, 'checkout'])->name('checkout');
+    Route::get('/callback', [BillingController::class, 'callback'])->name('callback');
+});

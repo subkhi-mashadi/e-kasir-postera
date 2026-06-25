@@ -41,6 +41,18 @@
     </div>
 </form>
 
+{{-- Export buttons --}}
+<div class="flex gap-2 mt-3 mb-5">
+    <a href="{{ route('app.reports.sales.excel', ['dari'=>$dari,'sampai'=>$sampai]) }}"
+       class="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors">
+        📊 Export Excel
+    </a>
+    <a href="{{ route('app.reports.sales.pdf', ['dari'=>$dari,'sampai'=>$sampai]) }}"
+       class="inline-flex items-center gap-1.5 bg-red-600 hover:bg-red-700 text-white text-xs font-semibold px-3 py-2 rounded-xl transition-colors">
+        📄 Export PDF
+    </a>
+</div>
+
 {{-- Summary cards --}}
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
     <div class="bg-white rounded-2xl shadow-sm p-5">

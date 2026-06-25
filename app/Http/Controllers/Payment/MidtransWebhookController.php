@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Payment;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\SubscriptionInvoice;
 use App\Services\MidtransService;
+use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -33,6 +35,18 @@ class MidtransWebhookController extends Controller
         if (! $midtrans->verifySignature($orderId, $statusCode, $grossAmount, $signatureKey)) {
             Log::warning('Midtrans webhook signature mismatch', ['order_id' => $orderId]);
             return response()->json(['message' => 'Invalid signature'], 403);
+        }
+
+        // Check if this is a subscription invoice payment
+        if (str_starts_with($orderId, 'sub-')) {
+            $invoice = SubscriptionInvoice::where('midtrans_order_id', $orderId)->first();
+            if ($invoice && in_array($transStatus, ['settlement', 'capture'])) {
+                (new SubscriptionService())->activateFromInvoice($invoice, $payload['payment_type'] ?? 'midtrans');
+                Log::info('Subscription invoice paid', ['invoice_no' => $invoice->invoice_no]);
+            } elseif ($invoice && in_array($transStatus, ['cancel', 'deny', 'expire'])) {
+                $invoice->update(['status' => 'expired']);
+            }
+            return response()->json(['message' => 'OK']);
         }
 
         $order = Order::withoutGlobalScopes()

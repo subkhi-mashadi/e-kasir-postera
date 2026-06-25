@@ -30,6 +30,10 @@ class BranchController extends Controller
             'qris_image' => 'nullable|image|max:2048',
             'is_active'  => 'boolean',
         ]);
+        $company = auth()->user()->company;
+        if ($company && ! $company->canAddBranch()) {
+            return back()->withErrors(['name' => 'Batas jumlah cabang paket Anda telah tercapai. Upgrade paket untuk menambah cabang.']);
+        }
         $data['company_id'] = auth()->user()->company_id;
         $data['is_active']  = $request->boolean('is_active', true);
         if ($request->hasFile('qris_image')) {
