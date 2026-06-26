@@ -4,6 +4,9 @@ use App\Http\Controllers\Api\SyncOrderController;
 use App\Http\Controllers\Subscription\BillingController;
 use App\Http\Controllers\Auth\BranchSelectController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Landing\LandingController;
+use App\Http\Controllers\Landing\DemoController;
 use App\Http\Controllers\App\BranchController;
 use App\Http\Controllers\App\CategoryController;
 use App\Http\Controllers\App\CustomerController;
@@ -20,13 +23,16 @@ use App\Http\Controllers\Payment\MidtransWebhookController;
 use App\Http\Controllers\POS\POSController;
 use Illuminate\Support\Facades\Route;
 
-// ── Public ────────────────────────────────────────────────────────────────────
-Route::get('/', fn () => redirect()->route('login'));
+// ── Landing ───────────────────────────────────────────────────────────────────
+Route::get('/', [LandingController::class, 'index'])->name('home');
+Route::get('/demo', [DemoController::class, 'launch'])->name('demo')->middleware('throttle:20,1');
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [LoginController::class, 'show'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('throttle:10,1');
+    Route::get('/login',    [LoginController::class,   'show'])->name('login');
+    Route::post('/login',   [LoginController::class,   'login'])->name('login.post')->middleware('throttle:10,1');
+    Route::get('/register', [RegisterController::class,'show'])->name('register');
+    Route::post('/register',[RegisterController::class,'store'])->name('register.post')->middleware('throttle:5,1');
 });
 
 Route::middleware('auth')->group(function () {
