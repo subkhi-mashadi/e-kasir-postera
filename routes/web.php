@@ -8,6 +8,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Landing\LandingController;
 use App\Http\Controllers\Landing\DemoController;
 use App\Http\Controllers\App\BranchController;
+use App\Http\Controllers\App\SettingsController;
 use App\Http\Controllers\App\CategoryController;
 use App\Http\Controllers\App\CustomerController;
 use App\Http\Controllers\App\DashboardController;
@@ -30,7 +31,7 @@ Route::get('/demo', [DemoController::class, 'launch'])->name('demo')->middleware
 // ── Auth ──────────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
     Route::get('/login',    [LoginController::class,   'show'])->name('login');
-    Route::post('/login',   [LoginController::class,   'login'])->name('login.post')->middleware('throttle:10,1');
+    Route::post('/login',   [LoginController::class,   'login'])->name('login.post')->middleware('throttle:5,1');
     Route::get('/register', [RegisterController::class,'show'])->name('register');
     Route::post('/register',[RegisterController::class,'store'])->name('register.post')->middleware('throttle:5,1');
 });
@@ -77,6 +78,7 @@ Route::middleware(['auth', 'tenant.active', 'branch.selected'])
 
         // Orders history
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
         // Reports
         Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
@@ -86,6 +88,10 @@ Route::middleware(['auth', 'tenant.active', 'branch.selected'])
 
         // Customers
         Route::resource('customers', CustomerController::class)->except(['show']);
+
+        // Settings (owner only)
+        Route::get('/settings/payment', [SettingsController::class, 'payment'])->name('settings.payment');
+        Route::post('/settings/payment', [SettingsController::class, 'updatePayment'])->name('settings.payment.update');
     });
 
 // ── POS (Kasir) ───────────────────────────────────────────────────────────────

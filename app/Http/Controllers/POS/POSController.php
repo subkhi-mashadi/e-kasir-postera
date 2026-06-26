@@ -161,7 +161,7 @@ class POSController extends Controller
 
             // Invoice number: INV/YYYYMMDD/BBBB/NNNN
             $today     = now()->format('Ymd');
-            $seq       = Order::whereDate('created_at', today())->where('branch_id', $branchId)->lockForUpdate()->count() + 1;
+            $seq       = Order::whereDate('created_at', today())->where('branch_id', $branchId)->whereNotNull('invoice_no')->lockForUpdate()->count() + 1;
             $invoiceNo = 'INV/' . $today . '/' . str_pad($branchId, 2, '0', STR_PAD_LEFT) . '/' . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
             $order = Order::create([
@@ -331,7 +331,7 @@ class POSController extends Controller
     private function generateInvoice(int $branchId): string
     {
         $today = now()->format('Ymd');
-        $seq   = Order::whereDate('created_at', today())->where('branch_id', $branchId)->lockForUpdate()->count();
+        $seq   = Order::whereDate('created_at', today())->where('branch_id', $branchId)->whereNotNull('invoice_no')->lockForUpdate()->count() + 1;
         return 'INV/' . $today . '/' . str_pad($branchId, 2, '0', STR_PAD_LEFT) . '/' . str_pad($seq, 4, '0', STR_PAD_LEFT);
     }
 

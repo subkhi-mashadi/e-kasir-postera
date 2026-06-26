@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class LoginController extends Controller
 {
@@ -21,6 +22,11 @@ class LoginController extends Controller
         ]);
 
         if (! Auth::attempt($credentials, $request->boolean('remember'))) {
+            Log::warning('Failed login attempt', [
+                'email' => $request->email,
+                'ip'    => $request->ip(),
+                'ua'    => $request->userAgent(),
+            ]);
             return back()->withErrors(['email' => 'Email atau password salah.'])->onlyInput('email');
         }
 

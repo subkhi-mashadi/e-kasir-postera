@@ -62,10 +62,6 @@
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
                             Tersedia
                         </span>
-                    @elseif ($inv->min_qty > 0 && $inv->qty <= $inv->min_qty)
-                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
-                            Rendah ({{ (int) $inv->qty }})
-                        </span>
                     @else
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-700">
                             {{ (int) $inv->qty }}
@@ -116,6 +112,7 @@
 
                             <form action="{{ route('app.inventory.adjust', $inv->id) }}" method="POST" class="space-y-4">
                                 @csrf
+                                <input type="hidden" name="type" :value="adjType">
 
                                 {{-- Type --}}
                                 <div>
@@ -128,15 +125,14 @@
                                             'available'   => 'Tersedia',
                                             'unavailable' => 'Tdk Tersedia',
                                         ] as $val => $label)
-                                        <label class="flex items-center justify-center gap-1.5 border rounded-xl px-2 py-2 cursor-pointer text-xs font-medium transition-colors"
-                                               :class="adjType === '{{ $val }}'
-                                                    ? '{{ $val === 'delete' ? 'border-red-400 bg-red-50 text-red-600' : 'border-amber-400 bg-amber-50 text-amber-700' }}'
-                                                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'">
-                                            <input type="radio" name="type" value="{{ $val }}"
-                                                   x-model="adjType"
-                                                   class="sr-only">
+                                        <button type="button"
+                                                @click="adjType = '{{ $val }}'"
+                                                :class="adjType === '{{ $val }}'
+                                                    ? 'border-amber-400 bg-amber-50 text-amber-700'
+                                                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'"
+                                                class="flex items-center justify-center border rounded-xl px-2 py-2 text-xs font-medium transition-colors">
                                             {{ $label }}
-                                        </label>
+                                        </button>
                                         @endforeach
                                     </div>
                                 </div>

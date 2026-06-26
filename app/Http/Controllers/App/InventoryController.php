@@ -39,9 +39,14 @@ class InventoryController extends Controller
             return back()->with('success', 'Inventori dihapus.');
         }
 
-        if (in_array($data['type'], ['available', 'unavailable'])) {
-            $inventory->update(['is_available' => $data['type'] === 'available']);
-            return back()->with('success', 'Status ketersediaan diperbarui.');
+        if ($data['type'] === 'available') {
+            $inventory->update(['is_available' => true, 'qty' => 0]);
+            return back()->with('success', 'Produk diset tersedia (unlimited).');
+        }
+
+        if ($data['type'] === 'unavailable') {
+            $inventory->update(['is_available' => false]);
+            return back()->with('success', 'Produk diset tidak tersedia.');
         }
 
         $qtyBefore = $inventory->qty;

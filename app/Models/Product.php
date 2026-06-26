@@ -26,6 +26,11 @@ class Product extends Model implements HasMedia
         'is_active'   => 'boolean',
     ];
 
+    public function company()
+    {
+        return $this->belongsTo(Company::class);
+    }
+
     public function category()
     {
         return $this->belongsTo(Category::class);

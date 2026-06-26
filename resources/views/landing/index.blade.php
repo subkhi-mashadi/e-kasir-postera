@@ -147,7 +147,7 @@
         </svg>
     </div>
 
-    <div class="relative max-w-7xl mx-auto px-6 py-24 md:py-32 w-full">
+    <div class="relative max-w-6xl mx-auto px-6 py-24 md:py-32 w-full">
         <div class="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
 
             {{-- Teks kiri --}}
