@@ -470,6 +470,7 @@ function qrMenu() {
         showSuccess: false,
         orderResult: null,
         qrisImageUrl: null,
+        qrisString: null,
         qrisPolling: false,
         _qrisTimer: null,
         _qrisOrderId: null,
@@ -620,6 +621,7 @@ function qrMenu() {
                     this.showCart    = false;
                     if (this.paymentMethod === 'qris') {
                         this.qrisImageUrl = data.qris_image_url;
+                        this.qrisString   = data.qris_string || '';
                         this.showQris     = true;
                         this.startQrisPolling(data.order_id);
                     } else {
