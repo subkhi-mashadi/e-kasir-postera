@@ -20,9 +20,6 @@
 @endpush
 
 @section('content')
-<div class="mb-5">
-    <a href="{{ route('app.tables.index') }}" class="text-slate-500 hover:text-slate-700 text-sm">&larr; Kembali ke Daftar Meja</a>
-</div>
 
 <div class="max-w-md mx-auto space-y-5">
     {{-- QR Card --}}

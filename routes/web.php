@@ -4,7 +4,11 @@ use App\Http\Controllers\Api\SyncOrderController;
 use App\Http\Controllers\Subscription\BillingController;
 use App\Http\Controllers\Auth\BranchSelectController;
 use App\Http\Controllers\Auth\LoginController;
+use App\Http\Controllers\Auth\RegisterController;
+use App\Http\Controllers\Landing\LandingController;
+use App\Http\Controllers\Landing\DemoController;
 use App\Http\Controllers\App\BranchController;
+use App\Http\Controllers\App\SettingsController;
 use App\Http\Controllers\App\CategoryController;
 use App\Http\Controllers\App\CustomerController;
 use App\Http\Controllers\App\DashboardController;
@@ -13,6 +17,7 @@ use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\InventoryController;
 use App\Http\Controllers\App\ModifierGroupController;
 use App\Http\Controllers\App\ProductController;
+use App\Http\Controllers\App\StaffController;
 use App\Http\Controllers\App\TableController;
 use App\Http\Controllers\Kitchen\KitchenController;
 use App\Http\Controllers\Order\QrOrderController;
@@ -20,13 +25,16 @@ use App\Http\Controllers\Payment\MidtransWebhookController;
 use App\Http\Controllers\POS\POSController;
 use Illuminate\Support\Facades\Route;
 
-// ── Public ────────────────────────────────────────────────────────────────────
-Route::get('/', fn () => redirect()->route('login'));
+// ── Landing ───────────────────────────────────────────────────────────────────
+Route::get('/', [LandingController::class, 'index'])->name('home');
+Route::get('/demo', [DemoController::class, 'launch'])->name('demo')->middleware('throttle:20,1');
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 Route::middleware('guest')->group(function () {
-    Route::get('/login', [LoginController::class, 'show'])->name('login');
-    Route::post('/login', [LoginController::class, 'login'])->name('login.post')->middleware('throttle:10,1');
+    Route::get('/login',    [LoginController::class,   'show'])->name('login');
+    Route::post('/login',   [LoginController::class,   'login'])->name('login.post')->middleware('throttle:5,1');
+    Route::get('/register', [RegisterController::class,'show'])->name('register');
+    Route::post('/register',[RegisterController::class,'store'])->name('register.post')->middleware('throttle:5,1');
 });
 
 Route::middleware('auth')->group(function () {
@@ -71,6 +79,7 @@ Route::middleware(['auth', 'tenant.active', 'branch.selected'])
 
         // Orders history
         Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+        Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
 
         // Reports
         Route::get('/reports/sales', [ReportController::class, 'sales'])->name('reports.sales');
@@ -80,6 +89,13 @@ Route::middleware(['auth', 'tenant.active', 'branch.selected'])
 
         // Customers
         Route::resource('customers', CustomerController::class)->except(['show']);
+
+        // Staff management (owner only)
+        Route::resource('staff', StaffController::class)->except(['show']);
+
+        // Settings (owner only)
+        Route::get('/settings/payment', [SettingsController::class, 'payment'])->name('settings.payment');
+        Route::post('/settings/payment', [SettingsController::class, 'updatePayment'])->name('settings.payment.update');
     });
 
 // ── POS (Kasir) ───────────────────────────────────────────────────────────────

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Kasir — Pilih Cabang</title>
+    <title>Postera — Pilih Cabang</title>
     @vite(['resources/css/app.css'])
 </head>
 <body class="min-h-screen bg-amber-50 flex items-center justify-center p-4">

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Kasir') — E-Kasir</title>
+    <title>@yield('title', 'Kasir') — Postera</title>
     <link rel="manifest" href="/build/manifest.webmanifest">
     <meta name="theme-color" content="#92400e">
     <link rel="apple-touch-icon" href="/icons/icon-192.png">
@@ -19,7 +19,8 @@
 {{-- Top bar --}}
 <header class="h-12 bg-amber-900 flex items-center justify-between px-4 shrink-0 shadow-md">
     <div class="flex items-center gap-3">
-        <span class="text-white font-bold text-sm tracking-wide">E-Kasir</span>
+        <img src="{{ asset('icons/logo.png') }}" alt="Postera" class="w-10 h-10 object-contain">
+        <span class="text-white font-bold text-sm tracking-wide">Postera</span>
         <span class="text-amber-300/60 text-sm">|</span>
         <span class="text-amber-200 text-sm font-medium">{{ session('branch_name') ?? auth()->user()->branch?->name ?? '—' }}</span>
     </div>

@@ -65,8 +65,10 @@ class ProductController extends Controller
 
         $data['track_stock'] = $request->boolean('track_stock', true);
         $data['is_active']   = $request->boolean('is_active', true);
-        $data['sku']         = $data['sku'] ?: 'PRD-' . strtoupper(substr(md5(uniqid()), 0, 6));
-        $data['barcode']     = $data['barcode'] ?: '899' . str_pad(mt_rand(0, 9999999999), 10, '0', STR_PAD_LEFT);
+        $data['sku']         = ($data['sku'] ?? null) ?: 'PRD-' . strtoupper(substr(md5(uniqid()), 0, 6));
+        $data['barcode']     = ($data['barcode'] ?? null) ?: '899' . str_pad(mt_rand(0, 9999999999), 10, '0', STR_PAD_LEFT);
+        $data['cost_price']  = $data['cost_price'] ?? 0;
+        $data['tax_rate']    = $data['tax_rate'] ?? 0;
 
         $product = Product::create($data);
 
@@ -128,6 +130,8 @@ class ProductController extends Controller
 
         $data['track_stock'] = $request->boolean('track_stock', true);
         $data['is_active']   = $request->boolean('is_active', true);
+        $data['cost_price']  = $data['cost_price'] ?? 0;
+        $data['tax_rate']    = $data['tax_rate'] ?? 0;
 
         $product->update($data);
 

@@ -104,10 +104,11 @@ class POSController extends Controller
             'items.*.modifiers.*.modifier_option_id' => 'required|exists:modifier_options,id',
         ]);
 
-        $branchId = session('branch_id') ?? auth()->user()->branch_id;
-        $orderId  = null;
+        $branchId    = session('branch_id') ?? auth()->user()->branch_id;
+        $companyTax  = (float) (auth()->user()->company?->tax_rate ?? 0);
+        $orderId     = null;
 
-        DB::transaction(function () use ($data, $branchId, &$orderId) {
+        DB::transaction(function () use ($data, $branchId, $companyTax, &$orderId) {
             $subtotal    = 0;
             $taxTotal    = 0;
             $itemsToSave = [];
@@ -135,9 +136,14 @@ class POSController extends Controller
                     }
                 }
 
+                // Use product tax_rate; fallback to company tax_rate if product has none
+                $effectiveTax = (float) $product->tax_rate > 0
+                    ? (float) $product->tax_rate
+                    : $companyTax;
+
                 $unitPrice  = $basePrice + $modTotal;
                 $lineTotal  = $unitPrice * (int) $item['qty'];
-                $lineTax    = $lineTotal * ((float) $product->tax_rate / 100);
+                $lineTax    = $lineTotal * ($effectiveTax / 100);
 
                 $subtotal += $lineTotal;
                 $taxTotal += $lineTax;
@@ -161,7 +167,7 @@ class POSController extends Controller
 
             // Invoice number: INV/YYYYMMDD/BBBB/NNNN
             $today     = now()->format('Ymd');
-            $seq       = Order::whereDate('created_at', today())->where('branch_id', $branchId)->lockForUpdate()->count() + 1;
+            $seq       = Order::whereDate('created_at', today())->where('branch_id', $branchId)->whereNotNull('invoice_no')->lockForUpdate()->count() + 1;
             $invoiceNo = 'INV/' . $today . '/' . str_pad($branchId, 2, '0', STR_PAD_LEFT) . '/' . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
             $order = Order::create([
@@ -331,7 +337,7 @@ class POSController extends Controller
     private function generateInvoice(int $branchId): string
     {
         $today = now()->format('Ymd');
-        $seq   = Order::whereDate('created_at', today())->where('branch_id', $branchId)->lockForUpdate()->count();
+        $seq   = Order::whereDate('created_at', today())->where('branch_id', $branchId)->whereNotNull('invoice_no')->lockForUpdate()->count() + 1;
         return 'INV/' . $today . '/' . str_pad($branchId, 2, '0', STR_PAD_LEFT) . '/' . str_pad($seq, 4, '0', STR_PAD_LEFT);
     }
 

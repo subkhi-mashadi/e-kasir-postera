@@ -41,4 +41,14 @@ class OrderController extends Controller
 
         return view('app.orders.index', compact('orders'));
     }
+
+    public function show(Order $order)
+    {
+        $branchId = session('branch_id') ?? auth()->user()->branch_id;
+        abort_unless($order->branch_id === (int) $branchId, 403);
+
+        $order->load(['items.product', 'items.modifiers', 'table', 'payments', 'user']);
+
+        return view('app.orders.show', compact('order'));
+    }
 }
