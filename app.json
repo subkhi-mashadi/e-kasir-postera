@@ -4,7 +4,7 @@
   "repository": "https://github.com/username/e-kasir-postera",
   "logo": "",
   "keywords": ["laravel", "kasir", "pos", "php"],
-  "stack": "heroku-22",
+  "stack": "heroku-24",
   "buildpacks": [
     {
       "url": "heroku/php"
