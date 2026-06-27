@@ -65,6 +65,9 @@
             "@php artisan package:discover --ansi",
             "@php artisan filament:upgrade"
         ],
+        "post-install-cmd": [
+            "@php artisan migrate --force --no-interaction"
+        ],
         "post-update-cmd": [
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "@php artisan boost:update --ansi"
