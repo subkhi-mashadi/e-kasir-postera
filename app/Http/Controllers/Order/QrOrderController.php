@@ -241,8 +241,13 @@ class QrOrderController extends Controller
                 ]);
             } catch (\Exception $e) {
                 Log::error('Midtrans QRIS charge failed', [
-                    'order_id' => $order->id,
-                    'error'    => $e->getMessage(),
+                    'order_id'      => $order->id,
+                    'order_id_mid'  => $order->midtrans_order_id,
+                    'total'         => $order->total,
+                    'company_id'    => $company->id,
+                    'is_production' => config('midtrans.is_production'),
+                    'server_key'    => substr(config('midtrans.server_key') ?? '', 0, 10) . '...',
+                    'error'         => $e->getMessage(),
                 ]);
                 // Non-fatal: order is created, frontend will show fallback
             }

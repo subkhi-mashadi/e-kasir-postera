@@ -1,0 +1,93 @@
+{
+  "name": "e-kasir-postera",
+  "description": "Aplikasi Kasir Online dengan Multi-Tenancy untuk UMKM",
+  "repository": "https://github.com/username/e-kasir-postera",
+  "logo": "",
+  "keywords": ["laravel", "kasir", "pos", "php"],
+  "stack": "heroku-24",
+  "buildpacks": [
+    {
+      "url": "heroku/php"
+    }
+  ],
+  "env": {
+    "APP_KEY": {
+      "description": "Laravel application encryption key",
+      "generator": "secret"
+    },
+    "APP_ENV": {
+      "value": "production"
+    },
+    "APP_DEBUG": {
+      "value": "false"
+    },
+    "APP_URL": {
+      "description": "Application URL (include https://)",
+      "required": true
+    },
+    "APP_NAME": {
+      "value": "e-Kasir Postera"
+    },
+    "DB_CONNECTION": {
+      "value": "mysql"
+    },
+    "DB_HOST": {
+      "description": "MySQL host",
+      "required": true
+    },
+    "DB_PORT": {
+      "value": "3306"
+    },
+    "DB_DATABASE": {
+      "description": "MySQL database name",
+      "required": true
+    },
+    "DB_USERNAME": {
+      "description": "MySQL username",
+      "required": true
+    },
+    "DB_PASSWORD": {
+      "description": "MySQL password",
+      "required": true
+    },
+    "LOG_CHANNEL": {
+      "value": "errorlog"
+    },
+    "LOG_LEVEL": {
+      "value": "info"
+    },
+    "SESSION_DRIVER": {
+      "value": "database"
+    },
+    "SESSION_LIFETIME": {
+      "value": "120"
+    },
+    "QUEUE_CONNECTION": {
+      "value": "database"
+    },
+    "CACHE_STORE": {
+      "value": "database"
+    },
+    "FILESYSTEM_DISK": {
+      "value": "s3"
+    }
+  },
+  "formation": {
+    "web": {
+      "quantity": 1,
+      "size": "basic"
+    },
+    "worker": {
+      "quantity": 1,
+      "size": "basic"
+    }
+  },
+  "addons": [
+    {
+      "plan": "jawsdb-kitefin:shared"
+    }
+  ],
+  "scripts": {
+    "postdeploy": "php artisan migrate --force"
+  }
+}
