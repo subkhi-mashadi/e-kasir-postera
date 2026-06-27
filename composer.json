@@ -15,7 +15,10 @@
         "midtrans/midtrans-php": "*",
         "simplesoftwareio/simple-qrcode": "*",
         "spatie/laravel-medialibrary": "*",
-        "spatie/laravel-permission": "*"
+        "spatie/laravel-permission": "*",
+        "ext-gd": "*",
+        "ext-exif": "*",
+        "ext-pgsql": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
