@@ -22,6 +22,7 @@ class Company extends Model
         'currency', 'timezone', 'tax_rate', 'tax_inclusive',
         'receipt_settings', 'is_active',
         'midtrans_server_key', 'midtrans_client_key', 'midtrans_is_production',
+        'xendit_secret_key', 'payment_provider',
     ];
 
     protected $casts = [
@@ -32,11 +33,13 @@ class Company extends Model
         'midtrans_is_production'  => 'boolean',
         'midtrans_server_key'     => 'encrypted',
         'midtrans_client_key'     => 'encrypted',
+        'xendit_secret_key'       => 'encrypted',
     ];
 
     protected $hidden = [
         'midtrans_server_key',
         'midtrans_client_key',
+        'xendit_secret_key',
     ];
 
     public function branches()

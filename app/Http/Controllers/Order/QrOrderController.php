@@ -12,6 +12,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Table;
 use App\Services\MidtransService;
+use App\Services\XenditService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -224,32 +225,42 @@ class QrOrderController extends Controller
 
         $order = Order::withoutGlobalScopes()->with('items.modifiers')->find($orderId);
 
-        // For QRIS: call Midtrans Core API to get a dynamic QR code
+        // For QRIS: generate dynamic QR via configured payment provider
         $midtransQrUrl = null;
         if ($data['preferred_payment'] === 'qris' && $order->midtrans_order_id) {
+            $provider = $company->payment_provider ?? 'midtrans';
             try {
-                $midtrans      = new MidtransService($company);
-                $result        = $midtrans->chargeQris(
-                    $order->midtrans_order_id,
-                    (int) round((float) $order->total),
-                    $data['customer_name']
-                );
-                $midtransQrUrl = $result['qr_url'];
-                $order->update([
-                    'midtrans_qr_url' => $midtransQrUrl,
-                    'midtrans_status' => $result['status'],
-                ]);
+                if ($provider === 'xendit') {
+                    $xendit        = new XenditService($company);
+                    $result        = $xendit->chargeQris(
+                        $order->midtrans_order_id,
+                        (int) round((float) $order->total)
+                    );
+                    $midtransQrUrl = $result['qr_url'];
+                    $order->update([
+                        'midtrans_qr_url' => $midtransQrUrl,
+                        'midtrans_status' => strtolower($result['status']),
+                    ]);
+                } else {
+                    $midtrans      = new MidtransService($company);
+                    $result        = $midtrans->chargeQris(
+                        $order->midtrans_order_id,
+                        (int) round((float) $order->total),
+                        $data['customer_name']
+                    );
+                    $midtransQrUrl = $result['qr_url'];
+                    $order->update([
+                        'midtrans_qr_url' => $midtransQrUrl,
+                        'midtrans_status' => $result['status'],
+                    ]);
+                }
             } catch (\Exception $e) {
-                Log::error('Midtrans QRIS charge failed', [
-                    'order_id'      => $order->id,
-                    'order_id_mid'  => $order->midtrans_order_id,
-                    'total'         => $order->total,
-                    'company_id'    => $company->id,
-                    'is_production' => config('midtrans.is_production'),
-                    'server_key'    => substr(config('midtrans.server_key') ?? '', 0, 10) . '...',
-                    'error'         => $e->getMessage(),
+                Log::error('QRIS charge failed', [
+                    'provider'  => $provider,
+                    'order_id'  => $order->id,
+                    'ref_id'    => $order->midtrans_order_id,
+                    'error'     => $e->getMessage(),
                 ]);
-                // Non-fatal: order is created, frontend will show fallback
             }
         }
 

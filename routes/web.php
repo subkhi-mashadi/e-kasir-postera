@@ -22,6 +22,7 @@ use App\Http\Controllers\App\TableController;
 use App\Http\Controllers\Kitchen\KitchenController;
 use App\Http\Controllers\Order\QrOrderController;
 use App\Http\Controllers\Payment\MidtransWebhookController;
+use App\Http\Controllers\Payment\XenditWebhookController;
 use App\Http\Controllers\POS\POSController;
 use Illuminate\Support\Facades\Route;
 
@@ -124,6 +125,7 @@ Route::get('/order-submitted', fn () => view('order.submitted'))->name('order.su
 
 // ── Midtrans webhook ──────────────────────────────────────────────────────────
 Route::post('/webhook/midtrans', [MidtransWebhookController::class, 'handle'])->name('webhook.midtrans');
+Route::post('/webhook/xendit', [XenditWebhookController::class, 'handle'])->name('webhook.xendit');
 
 // ── Kitchen display ───────────────────────────────────────────────────────────
 Route::middleware(['auth', 'tenant.active', 'branch.selected'])

@@ -20,9 +20,11 @@ class SettingsController extends Controller
         abort_unless(auth()->user()->hasRole('owner') && ! session('is_demo'), 403);
 
         $data = $request->validate([
-            'midtrans_server_key'    => 'nullable|string|max:255',
-            'midtrans_client_key'    => 'nullable|string|max:255',
+            'midtrans_server_key'    => 'nullable|string|max:500',
+            'midtrans_client_key'    => 'nullable|string|max:500',
             'midtrans_is_production' => 'boolean',
+            'xendit_secret_key'      => 'nullable|string|max:500',
+            'payment_provider'       => 'required|in:midtrans,xendit',
         ]);
 
         $data['midtrans_is_production'] = $request->boolean('midtrans_is_production');
