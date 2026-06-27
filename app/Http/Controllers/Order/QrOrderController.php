@@ -11,7 +11,7 @@ use App\Models\Order;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\Table;
-use App\Services\MidtransService;
+use App\Services\PaymentGatewayFactory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -119,9 +119,10 @@ class QrOrderController extends Controller
             'items.*.modifiers.*.modifier_option_id' => 'required|exists:modifier_options,id',
         ]);
 
+        $gatewayName = $company->payment_gateway ?? 'midtrans';
         $orderId = null;
 
-        DB::transaction(function () use ($data, $branch, $company, $table, &$orderId) {
+        DB::transaction(function () use ($data, $branch, $company, $table, $gatewayName, &$orderId) {
             $subtotal = 0;
             $taxTotal = 0;
             $itemsToSave = [];
@@ -175,8 +176,8 @@ class QrOrderController extends Controller
             $total  = $subtotal + $taxTotal;
             $isQris = $data['preferred_payment'] === 'qris';
 
-            // For QRIS: pre-generate a unique Midtrans order ID
-            $midtransOrderId = $isQris
+            // For QRIS: pre-generate a unique order ID
+            $gatewayOrderId = $isQris
                 ? 'QR-' . $branch->id . '-' . now()->format('YmdHis') . '-' . strtoupper(substr(uniqid(), -4))
                 : null;
 
@@ -190,7 +191,8 @@ class QrOrderController extends Controller
                 'source'            => 'qr',
                 'preferred_payment' => $data['preferred_payment'],
                 'status'            => 'open',
-                'midtrans_order_id' => $midtransOrderId,
+                'gateway'           => $gatewayName,
+                'midtrans_order_id' => $gatewayOrderId,
                 'midtrans_status'   => $isQris ? 'pending' : null,
                 'subtotal'          => $subtotal,
                 'discount_amount'   => 0,
@@ -224,39 +226,39 @@ class QrOrderController extends Controller
 
         $order = Order::withoutGlobalScopes()->with('items.modifiers')->find($orderId);
 
-        // For QRIS: call Midtrans Core API to get a dynamic QR code
-        $midtransQrUrl = null;
+        // For QRIS: call payment gateway
+        $qrUrl       = null;
+        $redirectUrl = null;
         if ($data['preferred_payment'] === 'qris' && $order->midtrans_order_id) {
             try {
-                $midtrans      = new MidtransService($company);
-                $result        = $midtrans->chargeQris(
+                $gateway = (new PaymentGatewayFactory())->make($company);
+                $result  = $gateway->chargeQris(
                     $order->midtrans_order_id,
                     (int) round((float) $order->total),
                     $data['customer_name']
                 );
-                $midtransQrUrl = $result['qr_url'];
+                $qrUrl       = $result['qr_url'];
+                $redirectUrl = $result['redirect_url'] ?? null;
                 $order->update([
-                    'midtrans_qr_url' => $midtransQrUrl,
+                    'midtrans_qr_url' => $qrUrl,
                     'midtrans_status' => $result['status'],
                 ]);
             } catch (\Exception $e) {
-                Log::error('Midtrans QRIS charge failed', [
-                    'order_id'      => $order->id,
-                    'order_id_mid'  => $order->midtrans_order_id,
-                    'total'         => $order->total,
-                    'company_id'    => $company->id,
-                    'is_production' => config('midtrans.is_production'),
-                    'server_key'    => substr(config('midtrans.server_key') ?? '', 0, 10) . '...',
-                    'error'         => $e->getMessage(),
+                Log::error('Gateway QRIS charge failed', [
+                    'order_id'    => $order->id,
+                    'gateway'     => $gatewayName,
+                    'total'       => $order->total,
+                    'company_id'  => $company->id,
+                    'error'       => $e->getMessage(),
                 ]);
-                // Non-fatal: order is created, frontend will show fallback
             }
         }
 
         return response()->json([
             'order_id'          => $order->id,
             'preferred_payment' => $data['preferred_payment'],
-            'qris_image_url'    => $midtransQrUrl,
+            'qris_image_url'    => $qrUrl,
+            'redirect_url'      => $redirectUrl,
             'table_name'        => $table->name,
             'customer_name'     => $data['customer_name'],
             'subtotal'          => (float) $order->subtotal,
@@ -293,18 +295,23 @@ class QrOrderController extends Controller
             return response()->json(['paid' => true, 'status' => 'paid']);
         }
 
-        // Check with Midtrans directly (poll fallback)
+        // Check with payment gateway directly (poll fallback)
         if ($order->midtrans_order_id) {
             try {
-                $midtrans = new MidtransService($table->branch->company);
-                $result   = $midtrans->getStatus($order->midtrans_order_id);
+                $gateway = (new PaymentGatewayFactory())->make($table->branch->company);
+                $result  = $gateway->getStatus($order->midtrans_order_id);
 
-                if ($result && in_array($result->transaction_status, ['settlement', 'capture'])) {
-                    $this->markOrderPaid($order, $result);
+                $settledStatuses = $gateway->getName() === 'midtrans'
+                    ? ['settlement', 'capture']
+                    : ['settled', 'SUCCESS', 'completed'];
+
+                if ($result && in_array($result->transaction_status ?? $result->status ?? '', $settledStatuses)) {
+                    $this->markOrderPaid($order, $result, $gateway->getName());
                     return response()->json(['paid' => true, 'status' => 'paid']);
                 }
 
-                $order->update(['midtrans_status' => $result?->transaction_status ?? $order->midtrans_status]);
+                $status = $result->transaction_status ?? $result->status ?? $order->midtrans_status;
+                $order->update(['midtrans_status' => $status]);
             } catch (\Exception) {
                 // silent — return current DB state
             }
@@ -313,11 +320,13 @@ class QrOrderController extends Controller
         return response()->json(['paid' => false, 'status' => $order->midtrans_status ?? 'pending']);
     }
 
-    private function markOrderPaid(Order $order, object $midtransResult): void
+    private function markOrderPaid(Order $order, object $gatewayResult, string $gateway = 'midtrans'): void
     {
         if ($order->status === 'paid') return;
 
-        DB::transaction(function () use ($order, $midtransResult) {
+        $refProperty = $gateway === 'midtrans' ? 'transaction_id' : 'id';
+
+        DB::transaction(function () use ($order, $gatewayResult, $refProperty) {
             $today     = now()->format('Ymd');
             $seq       = Order::withoutGlobalScopes()
                 ->whereDate('created_at', today())
@@ -326,19 +335,21 @@ class QrOrderController extends Controller
                 ->lockForUpdate()->count() + 1;
             $invoiceNo = 'INV/' . $today . '/' . str_pad($order->branch_id, 2, '0', STR_PAD_LEFT) . '/' . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
+            $status = $gatewayResult->transaction_status ?? $gatewayResult->status ?? 'paid';
+
             $order->update([
                 'status'          => 'paid',
                 'kitchen_status'  => 'pending',
                 'paid_amount'     => $order->total,
                 'invoice_no'      => $invoiceNo,
-                'midtrans_status' => $midtransResult->transaction_status,
+                'midtrans_status' => $status,
                 'synced_at'       => now(),
             ]);
 
             $order->payments()->create([
                 'method'    => 'qris',
                 'amount'    => (float) $order->total,
-                'reference' => $midtransResult->transaction_id ?? null,
+                'reference' => $gatewayResult->{$refProperty} ?? null,
             ]);
         });
     }

@@ -20,12 +20,17 @@ class SettingsController extends Controller
         abort_unless(auth()->user()->hasRole('owner') && ! session('is_demo'), 403);
 
         $data = $request->validate([
-            'midtrans_server_key'    => 'nullable|string|max:255',
-            'midtrans_client_key'    => 'nullable|string|max:255',
-            'midtrans_is_production' => 'boolean',
+            'payment_gateway'          => 'required|in:midtrans,doku',
+            'midtrans_server_key'      => 'nullable|string|max:255',
+            'midtrans_client_key'      => 'nullable|string|max:255',
+            'midtrans_is_production'   => 'boolean',
+            'doku_client_id'           => 'nullable|string|max:255',
+            'doku_secret_key'          => 'nullable|string|max:255',
+            'doku_is_production'       => 'boolean',
         ]);
 
         $data['midtrans_is_production'] = $request->boolean('midtrans_is_production');
+        $data['doku_is_production']     = $request->boolean('doku_is_production');
 
         auth()->user()->company->update($data);
 

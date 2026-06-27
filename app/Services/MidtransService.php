@@ -2,11 +2,14 @@
 
 namespace App\Services;
 
+use App\Contracts\PaymentGateway;
 use App\Models\Company;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Midtrans\Config;
 use Midtrans\CoreApi;
 
-class MidtransService
+class MidtransService implements PaymentGateway
 {
     public function __construct(?Company $company = null)
     {
@@ -23,10 +26,11 @@ class MidtransService
         Config::$is3ds        = config('midtrans.is_3ds');
     }
 
-    /**
-     * Create a QRIS charge via Midtrans Core API.
-     * Returns ['qr_url' => string, 'order_id' => string] on success.
-     */
+    public function getName(): string
+    {
+        return 'midtrans';
+    }
+
     public function chargeQris(string $orderId, int $amount, string $customerName): array
     {
         $payload = [
@@ -60,9 +64,6 @@ class MidtransService
         ];
     }
 
-    /**
-     * Get transaction status from Midtrans.
-     */
     public function getStatus(string $orderId): ?object
     {
         try {
@@ -72,11 +73,13 @@ class MidtransService
         }
     }
 
-    /**
-     * Verify webhook notification signature.
-     */
-    public function verifySignature(string $orderId, string $statusCode, string $grossAmount, string $signatureKey): bool
+    public function verifySignature(Request $request): bool
     {
+        $orderId      = $request->input('order_id');
+        $statusCode   = $request->input('status_code');
+        $grossAmount  = $request->input('gross_amount');
+        $signatureKey = $request->input('signature_key');
+
         $expected = hash('sha512', $orderId . $statusCode . $grossAmount . Config::$serverKey);
         return hash_equals($expected, $signatureKey);
     }

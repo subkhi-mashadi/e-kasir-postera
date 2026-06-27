@@ -7,8 +7,6 @@ use App\Models\Plan;
 use App\Models\SubscriptionInvoice;
 use App\Services\SubscriptionService;
 use Illuminate\Http\Request;
-use Midtrans\Config;
-use Midtrans\Transaction;
 
 class BillingController extends Controller
 {
@@ -34,9 +32,7 @@ class BillingController extends Controller
 
         $company = auth()->user()->company;
         $plan    = Plan::findOrFail($request->plan_id);
-
-        $service = new SubscriptionService();
-        $invoice = $service->createCheckout($company, $plan, $request->period);
+        $invoice = (new SubscriptionService())->createCheckout($company, $plan, $request->period);
 
         return response()->json([
             'snap_token' => $invoice->midtrans_snap_token,
@@ -59,10 +55,10 @@ class BillingController extends Controller
 
         // Webhook may not have arrived yet — check directly with Midtrans
         try {
-            Config::$serverKey    = config('midtrans.server_key');
-            Config::$isProduction = config('midtrans.is_production');
+            \Midtrans\Config::$serverKey    = config('midtrans.server_key');
+            \Midtrans\Config::$isProduction = config('midtrans.is_production');
 
-            $status = Transaction::status($invoice->midtrans_order_id);
+            $status = \Midtrans\Transaction::status($invoice->midtrans_order_id);
             if (in_array($status->transaction_status, ['settlement', 'capture'])) {
                 (new SubscriptionService())->activateFromInvoice($invoice, $status->payment_type ?? 'snap');
                 return redirect()->route('app.dashboard')->with('success', 'Langganan berhasil diaktifkan!');

@@ -21,7 +21,7 @@ use App\Http\Controllers\App\StaffController;
 use App\Http\Controllers\App\TableController;
 use App\Http\Controllers\Kitchen\KitchenController;
 use App\Http\Controllers\Order\QrOrderController;
-use App\Http\Controllers\Payment\MidtransWebhookController;
+use App\Http\Controllers\Payment\PaymentWebhookController;
 use App\Http\Controllers\POS\POSController;
 use Illuminate\Support\Facades\Route;
 
@@ -122,8 +122,9 @@ Route::get('/order/{token}/history', [QrOrderController::class, 'history'])->nam
 Route::get('/order/{token}/payment-status/{orderId}', [QrOrderController::class, 'paymentStatus'])->name('order.payment-status');
 Route::get('/order-submitted', fn () => view('order.submitted'))->name('order.submitted');
 
-// ── Midtrans webhook ──────────────────────────────────────────────────────────
-Route::post('/webhook/midtrans', [MidtransWebhookController::class, 'handle'])->name('webhook.midtrans');
+// ── Payment webhooks ──────────────────────────────────────────────────────────
+Route::post('/webhook/{gateway}', [PaymentWebhookController::class, 'handle'])->name('webhook.gateway')
+    ->whereIn('gateway', ['midtrans', 'doku']);
 
 // ── Kitchen display ───────────────────────────────────────────────────────────
 Route::middleware(['auth', 'tenant.active', 'branch.selected'])

@@ -21,7 +21,9 @@ class Company extends Model
         'name', 'slug', 'phone', 'address', 'logo',
         'currency', 'timezone', 'tax_rate', 'tax_inclusive',
         'receipt_settings', 'is_active',
+        'payment_gateway',
         'midtrans_server_key', 'midtrans_client_key', 'midtrans_is_production',
+        'doku_client_id', 'doku_secret_key', 'doku_merchant_id', 'doku_terminal_id', 'doku_is_production',
     ];
 
     protected $casts = [
@@ -29,14 +31,20 @@ class Company extends Model
         'tax_inclusive'           => 'boolean',
         'receipt_settings'        => 'array',
         'is_active'               => 'boolean',
+        'payment_gateway'         => 'string',
         'midtrans_is_production'  => 'boolean',
         'midtrans_server_key'     => 'encrypted',
         'midtrans_client_key'     => 'encrypted',
+        'doku_is_production'      => 'boolean',
+        'doku_client_id'          => 'encrypted',
+        'doku_secret_key'         => 'encrypted',
     ];
 
     protected $hidden = [
         'midtrans_server_key',
         'midtrans_client_key',
+        'doku_client_id',
+        'doku_secret_key',
     ];
 
     public function branches()

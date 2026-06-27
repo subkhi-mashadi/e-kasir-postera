@@ -619,9 +619,13 @@ function qrMenu() {
                     this.orderResult = data;
                     this.showCart    = false;
                     if (this.paymentMethod === 'qris') {
-                        this.qrisImageUrl = data.qris_image_url;
-                        this.showQris     = true;
-                        this.startQrisPolling(data.order_id);
+                        if (data.redirect_url) {
+                            window.location.href = data.redirect_url;
+                        } else {
+                            this.qrisImageUrl = data.qris_image_url;
+                            this.showQris     = true;
+                            this.startQrisPolling(data.order_id);
+                        }
                     } else {
                         this.showSuccess = true;
                     }

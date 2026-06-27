@@ -11,28 +11,6 @@ use Midtrans\Snap;
 
 class SubscriptionService
 {
-    public function __construct()
-    {
-        Config::$serverKey    = config('midtrans.server_key');
-        Config::$clientKey    = config('midtrans.client_key');
-        Config::$isProduction = config('midtrans.is_production');
-        Config::$isSanitized  = config('midtrans.is_sanitized');
-        Config::$is3ds        = config('midtrans.is_3ds');
-    }
-
-    public function createTrial(Company $company, Plan $plan): Subscription
-    {
-        return Subscription::create([
-            'company_id'    => $company->id,
-            'plan_id'       => $plan->id,
-            'status'        => 'trial',
-            'period'        => 'monthly',
-            'trial_ends_at' => now()->addDays($plan->trial_days),
-            'starts_at'     => now(),
-            'ends_at'       => now()->addDays($plan->trial_days),
-        ]);
-    }
-
     public function createCheckout(Company $company, Plan $plan, string $period = 'monthly'): SubscriptionInvoice
     {
         $amount    = $period === 'yearly' ? (float) $plan->price_yearly : (float) $plan->price_monthly;
@@ -59,8 +37,27 @@ class SubscriptionService
             'expires_at'       => now()->addHours(24),
         ]);
 
-        // Create Midtrans Snap token
-        $snapToken = Snap::getSnapToken([
+        $snapToken = $this->createMidtransSnap($orderId, $amount, $company, $plan, $period);
+
+        $invoice->update([
+            'midtrans_snap_token' => $snapToken,
+            'midtrans_payload'    => ['plan_id' => $plan->id, 'period' => $period],
+        ]);
+
+        return $invoice;
+    }
+
+    private function createMidtransSnap(string $orderId, int $amount, Company $company, Plan $plan, string $period): string
+    {
+        Config::$serverKey    = ($company->midtrans_server_key) ?: config('midtrans.server_key');
+        Config::$clientKey    = ($company->midtrans_client_key) ?: config('midtrans.client_key');
+        Config::$isProduction = ($company->midtrans_server_key)
+            ? (bool) $company->midtrans_is_production
+            : config('midtrans.is_production');
+        Config::$isSanitized  = config('midtrans.is_sanitized');
+        Config::$is3ds        = config('midtrans.is_3ds');
+
+        return Snap::getSnapToken([
             'transaction_details' => [
                 'order_id'     => $orderId,
                 'gross_amount' => (int) $amount,
@@ -80,13 +77,19 @@ class SubscriptionService
                 'notification' => rtrim(config('app.url'), '/') . '/webhook/midtrans',
             ],
         ]);
+    }
 
-        $invoice->update([
-            'midtrans_snap_token' => $snapToken,
-            'midtrans_payload'    => ['plan_id' => $plan->id, 'period' => $period],
+    public function createTrial(Company $company, Plan $plan): Subscription
+    {
+        return Subscription::create([
+            'company_id'    => $company->id,
+            'plan_id'       => $plan->id,
+            'status'        => 'trial',
+            'period'        => 'monthly',
+            'trial_ends_at' => now()->addDays($plan->trial_days),
+            'starts_at'     => now(),
+            'ends_at'       => now()->addDays($plan->trial_days),
         ]);
-
-        return $invoice;
     }
 
     public function activateFromInvoice(SubscriptionInvoice $invoice, string $paymentMethod): void

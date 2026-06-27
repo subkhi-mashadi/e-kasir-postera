@@ -142,17 +142,16 @@
     <div class="mt-8 bg-amber-50 border border-amber-200 rounded-2xl p-5">
         <p class="text-sm font-semibold text-amber-800 mb-1">Invoice Menunggu Pembayaran</p>
         <p class="text-xs text-amber-700">Invoice <span class="font-mono">{{ $pendingInvoice->invoice_no }}</span> — Rp {{ number_format($pendingInvoice->amount, 0, ',', '.') }}</p>
-        @if ($pendingInvoice->midtrans_snap_token)
-        <button onclick="payPending('{{ $pendingInvoice->midtrans_snap_token }}', {{ $pendingInvoice->id }})"
+        <button onclick="payPending({{ $pendingInvoice->id }})"
                 class="mt-3 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold px-4 py-2 rounded-xl transition-colors">
             Lanjutkan Pembayaran
         </button>
-        @endif
     </div>
     @endif
 </div>
 
 <script src="{{ config('midtrans.is_production') ? 'https://app.midtrans.com/snap/snap.js' : 'https://app.sandbox.midtrans.com/snap/snap.js' }}" data-client-key="{{ config('midtrans.client_key') }}"></script>
+
 <script>
 function checkout() {
     const el = document.querySelector('[x-data]');
@@ -180,11 +179,23 @@ function checkout() {
     .catch(() => { comp.processing = false; alert('Gagal terhubung ke server.'); });
 }
 
-function payPending(token, invoiceId) {
-    snap.pay(token, {
-        onSuccess: () => { window.location.href = '{{ route('subscription.callback') }}?invoice_id=' + invoiceId; },
-        onClose:   () => {},
-    });
+function payPending(invoiceId) {
+    fetch('{{ route('subscription.checkout') }}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').content,
+        },
+        body: JSON.stringify({ invoice_id: invoiceId }),
+    })
+    .then(r => r.json())
+    .then(data => {
+        snap.pay(data.snap_token, {
+            onSuccess: () => { window.location.href = '{{ route('subscription.callback') }}?invoice_id=' + invoiceId; },
+            onClose:   () => {},
+        });
+    })
+    .catch(() => alert('Gagal terhubung ke server.'));
 }
 </script>
 

@@ -115,7 +115,7 @@ class DemoSeeder extends Seeder
             }
 
             if (! $company->subscription || $company->subscription->status === 'expired') {
-                $plan = \App\Models\Plan::where('slug', 'pro')->first();
+                $plan = \App\Models\Plan::where('slug', 'enterprise')->first();
                 if ($plan) {
                     (new SubscriptionService())->createTrial($company, $plan);
                 }
