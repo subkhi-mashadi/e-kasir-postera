@@ -9,7 +9,7 @@ class SettingsController extends Controller
 {
     public function payment()
     {
-        abort_unless(auth()->user()->hasRole('owner'), 403);
+        abort_unless(auth()->user()->hasRole('owner') && ! session('is_demo'), 403);
 
         $company = auth()->user()->company;
         return view('app.settings.payment', compact('company'));
@@ -17,7 +17,7 @@ class SettingsController extends Controller
 
     public function updatePayment(Request $request)
     {
-        abort_unless(auth()->user()->hasRole('owner'), 403);
+        abort_unless(auth()->user()->hasRole('owner') && ! session('is_demo'), 403);
 
         $data = $request->validate([
             'midtrans_server_key'    => 'nullable|string|max:255',

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Kasir — Kasir Digital untuk Bisnis F&B Modern</title>
+    <title>Postera — Kasir Digital untuk Bisnis F&B Modern</title>
     <meta name="description" content="Sistem kasir POS berbasis cloud untuk restoran, kafe, dan warung. QR ordering, kitchen display, laporan real-time, dan bisa offline.">
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>
@@ -86,13 +86,8 @@
         class="fixed top-0 inset-x-0 z-50 transition-all duration-300">
     <div class="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-            <div class="w-8 h-8 bg-amber-500 rounded-xl flex items-center justify-center shadow shadow-amber-500/40 group-hover:scale-110 transition-transform">
-                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 20h16a1 1 0 001-1V9a1 1 0 00-.293-.707l-5-5A1 1 0 0015 3H4a1 1 0 00-1 1v15a1 1 0 001 1z"/>
-                </svg>
-            </div>
-            <span :class="scrolled ? 'text-slate-800' : 'text-white'" class="text-lg font-black tracking-tight transition-colors">E-Kasir</span>
+            <img src="{{ asset('icons/logo.png') }}" alt="Postera" class="w-14 h-14 object-contain group-hover:scale-110 transition-transform">
+            <span :class="scrolled ? 'text-slate-800' : 'text-white'" class="text-lg font-black tracking-tight transition-colors">Postera</span>
         </a>
 
         <nav class="hidden md:flex items-center gap-8">
@@ -203,7 +198,7 @@
                         <div class="w-3 h-3 rounded-full bg-amber-400/70 hover:bg-amber-400 transition-colors cursor-pointer"></div>
                         <div class="w-3 h-3 rounded-full bg-green-400/70 hover:bg-green-400 transition-colors cursor-pointer"></div>
                         <div class="flex-1 bg-amber-800/60 rounded-lg px-3 py-1.5 ml-2">
-                            <span class="text-amber-400/50 text-xs">e-kasir.app/pos</span>
+                            <span class="text-amber-400/50 text-xs">postera.app/pos</span>
                         </div>
                     </div>
                     <div class="bg-slate-900 rounded-2xl overflow-hidden">
@@ -323,7 +318,7 @@
     <div class="max-w-5xl mx-auto px-6">
         <div class="text-center mb-16" data-reveal>
             <span class="text-amber-500 text-sm font-bold uppercase tracking-widest">Mudah Dimulai</span>
-            <h2 class="text-3xl md:text-4xl font-black text-slate-800 mt-3 mb-4">3 Langkah Mulai Pakai E-Kasir</h2>
+            <h2 class="text-3xl md:text-4xl font-black text-slate-800 mt-3 mb-4">3 Langkah Mulai Pakai Postera</h2>
             <p class="text-slate-500">Setup selesai dalam 10 menit. Tidak perlu keahlian teknis.</p>
         </div>
 
@@ -563,11 +558,11 @@
         <h2 class="text-3xl font-black text-slate-800 text-center mb-12" data-reveal>Pertanyaan Umum</h2>
         <div x-data="{ open: null }" class="space-y-3">
             @foreach([
-                ['Apakah bisa dipakai offline?','Ya! Kasir E-Kasir berbasis PWA. Saat internet mati, transaksi tetap bisa dilakukan dan tersimpan lokal. Begitu online kembali, data otomatis sinkron ke server.'],
+                ['Apakah bisa dipakai offline?','Ya! Kasir Postera berbasis PWA. Saat internet mati, transaksi tetap bisa dilakukan dan tersimpan lokal. Begitu online kembali, data otomatis sinkron ke server.'],
                 ['Berapa lama trial gratis?','Trial 14 hari gratis untuk semua paket, tanpa input kartu kredit. Setelah trial, pilih paket yang sesuai — data tidak akan hilang.'],
                 ['Apakah bisa multi-kasir?','Ya, tergantung paket. Starter: 3 kasir, Pro: 10 kasir, Enterprise: tidak terbatas — semua beroperasi di cabang yang sama secara bersamaan.'],
                 ['Bagaimana dengan keamanan data?','Data disimpan di cloud yang ter-enkripsi. Setiap usaha datanya terisolasi sepenuhnya. Backup otomatis harian.'],
-                ['Apakah bisa untuk semua jenis F&B?','E-Kasir cocok untuk kafe, restoran, warung makan, bakery, hingga food court. Sistem mendukung varian produk, modifier (topping/level), dan meja per area.'],
+                ['Apakah bisa untuk semua jenis F&B?','Postera cocok untuk kafe, restoran, warung makan, bakery, hingga food court. Sistem mendukung varian produk, modifier (topping/level), dan meja per area.'],
             ] as $i => [$q,$a])
             <div class="border border-slate-100 rounded-2xl overflow-hidden hover:border-amber-200 transition-colors" data-reveal data-delay="{{ $i + 1 }}">
                 <button @click="open = open === {{ $i }} ? null : {{ $i }}"
@@ -605,7 +600,7 @@
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7l5 5m0 0l-5 5m5-5H6"/>
             </svg>
         </a>
-        <p class="text-amber-400/50 text-sm mt-6">Bergabung dengan 500+ usaha F&B yang sudah pakai E-Kasir</p>
+        <p class="text-amber-400/50 text-sm mt-6">Bergabung dengan 500+ usaha F&B yang sudah pakai Postera</p>
     </div>
 </section>
 
@@ -613,15 +608,10 @@
 <footer class="bg-slate-900 text-slate-400 py-10">
     <div class="max-w-6xl mx-auto px-6 flex flex-col md:flex-row items-center justify-between gap-4">
         <a href="{{ route('home') }}" class="flex items-center gap-2.5 group">
-            <div class="w-7 h-7 bg-amber-500 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform">
-                <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
-                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 20h16a1 1 0 001-1V9a1 1 0 00-.293-.707l-5-5A1 1 0 0015 3H4a1 1 0 00-1 1v15a1 1 0 001 1z"/>
-                </svg>
-            </div>
-            <span class="font-black text-white group-hover:text-amber-400 transition-colors">E-Kasir</span>
+            <img src="{{ asset('icons/logo.png') }}" alt="Postera" class="w-12 h-12 object-contain group-hover:scale-110 transition-transform">
+            <span class="font-black text-white group-hover:text-amber-400 transition-colors">Postera</span>
         </a>
-        <p class="text-xs text-slate-600">© {{ date('Y') }} E-Kasir. Kasir digital untuk bisnis F&B modern.</p>
+        <p class="text-xs text-slate-600">© {{ date('Y') }} Postera. Kasir digital untuk bisnis F&B modern.</p>
         <div class="flex gap-5 text-sm">
             <a href="{{ route('login') }}"    class="hover:text-amber-400 transition-colors">Masuk</a>
             <a href="{{ route('register') }}" class="hover:text-amber-400 transition-colors font-semibold">Daftar Gratis</a>

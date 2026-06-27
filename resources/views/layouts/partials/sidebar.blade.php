@@ -9,14 +9,11 @@ $linkClass = fn($pattern) => 'flex items-center gap-3 px-3 py-2 rounded-xl text-
 
 {{-- Brand / user --}}
 <div class="flex items-center gap-3 px-5 py-4 border-b border-amber-800/60">
-    <div class="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center shrink-0 shadow-lg shadow-amber-900/50">
-        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 20h16a1 1 0 001-1V9a1 1 0 00-.293-.707l-5-5A1 1 0 0015 3H4a1 1 0 00-1 1v15a1 1 0 001 1z"/>
-        </svg>
+    <div class="w-12 h-12 rounded-xl shrink-0 overflow-hidden bg-white/10">
+        <img src="{{ asset('icons/logo.png') }}" alt="Postera" class="w-full h-full object-contain">
     </div>
     <div class="min-w-0">
-        <div class="font-bold text-sm truncate text-amber-50">{{ auth()->user()->company?->name ?? 'E-Kasir' }}</div>
+        <div class="font-bold text-sm truncate text-amber-50">{{ auth()->user()->company?->name ?? 'Postera' }}</div>
         <div class="text-xs text-amber-300/70 truncate">{{ auth()->user()->name }}</div>
     </div>
 </div>
@@ -111,12 +108,21 @@ $linkClass = fn($pattern) => 'flex items-center gap-3 px-3 py-2 rounded-xl text-
     @role('owner')
     <p class="text-xs text-amber-400/60 uppercase tracking-wider px-3 pt-4 pb-1">Pengaturan</p>
 
+    <a href="{{ route('app.staff.index') }}" class="{{ $linkClass('app.staff') }}">
+        <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+        </svg>
+        Tim Staf
+    </a>
+
+    @unless(session('is_demo'))
     <a href="{{ route('app.settings.payment') }}" class="{{ $linkClass('app.settings') }}">
         <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
         </svg>
         Pembayaran
     </a>
+    @endunless
     @endrole
 
     {{-- Laporan --}}

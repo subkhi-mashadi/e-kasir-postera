@@ -22,7 +22,7 @@
 
             {{-- Header --}}
             <div class="text-center px-6 pt-6 pb-4 border-b border-dashed border-slate-200">
-                <h1 class="font-black text-lg text-slate-800">{{ $order->branch?->company?->name ?? 'E-Kasir' }}</h1>
+                <h1 class="font-black text-lg text-slate-800">{{ $order->branch?->company?->name ?? 'Postera' }}</h1>
                 <p class="text-xs text-slate-500 mt-0.5">{{ $order->branch?->name }}</p>
                 @if ($order->branch?->address)
                     <p class="text-xs text-slate-400 mt-0.5">{{ $order->branch->address }}</p>
@@ -90,19 +90,24 @@
                     <span>Subtotal</span>
                     <span>Rp {{ number_format($order->subtotal, 0, ',', '.') }}</span>
                 </div>
-                @if ($order->tax_amount > 0)
-                <div class="flex justify-between text-slate-500">
-                    <span>Pajak</span>
-                    <span>Rp {{ number_format($order->tax_amount, 0, ',', '.') }}</span>
-                </div>
-                @endif
                 @if ($order->discount_amount > 0)
                 <div class="flex justify-between text-emerald-600">
                     <span>Diskon</span>
                     <span>− Rp {{ number_format($order->discount_amount, 0, ',', '.') }}</span>
                 </div>
                 @endif
-                <div class="flex justify-between font-black text-slate-800 pt-1 border-t border-slate-100">
+                @if ($order->tax_amount > 0)
+                @php
+                    $taxPct = $order->subtotal > 0
+                        ? round($order->tax_amount / $order->subtotal * 100, 1)
+                        : 0;
+                @endphp
+                <div class="flex justify-between text-slate-500">
+                    <span>Pajak{{ $taxPct > 0 ? ' ('.$taxPct.'%)' : '' }}</span>
+                    <span>Rp {{ number_format($order->tax_amount, 0, ',', '.') }}</span>
+                </div>
+                @endif
+                <div class="flex justify-between font-black text-slate-800 pt-2 border-t border-slate-100 text-base">
                     <span>TOTAL</span>
                     <span class="text-amber-600">Rp {{ number_format($order->total, 0, ',', '.') }}</span>
                 </div>
@@ -134,7 +139,7 @@
             {{-- Footer --}}
             <div class="px-6 py-5 text-center">
                 <p class="text-xs text-slate-400">Terima kasih sudah berkunjung!</p>
-                <p class="text-xs text-slate-300 mt-1">Powered by E-Kasir</p>
+                <p class="text-xs text-slate-300 mt-1">Powered by Postera</p>
             </div>
         </div>
     </div>

@@ -25,6 +25,7 @@ return Application::configure(basePath: dirname(__DIR__))
             '172.64.0.0/13','173.245.48.0/20','188.114.96.0/20',
             '190.93.240.0/20','197.234.240.0/22','198.41.128.0/17',
         ]);
+        $middleware->redirectUsersTo(fn () => route('app.dashboard'));
         $middleware->alias([
             'tenant.active'    => \App\Http\Middleware\EnsureTenantActive::class,
             'branch.selected'  => \App\Http\Middleware\EnsureBranchSelected::class,

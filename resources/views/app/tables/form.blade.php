@@ -3,9 +3,6 @@
 @section('page-title', isset($table) ? 'Edit Meja' : 'Tambah Meja')
 
 @section('content')
-<div class="mb-5">
-    <a href="{{ route('app.tables.index') }}" class="text-slate-500 hover:text-slate-700 text-sm">&larr; Kembali</a>
-</div>
 
 <div class="bg-white rounded-2xl shadow-sm p-6 max-w-lg">
     <h2 class="text-base font-semibold text-slate-800 mb-5">

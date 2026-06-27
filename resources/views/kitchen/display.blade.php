@@ -19,7 +19,8 @@
     {{-- Top bar (sama seperti POS) --}}
     <header class="h-12 bg-amber-900 flex items-center justify-between px-4 shrink-0 shadow-md">
         <div class="flex items-center gap-3">
-            <span class="text-white font-bold text-sm tracking-wide">E-Kasir</span>
+            <img src="{{ asset('icons/logo.png') }}" alt="Postera" class="w-10 h-10 object-contain">
+            <span class="text-white font-bold text-sm tracking-wide">Postera</span>
             <span class="text-amber-300/60 text-sm">|</span>
             <span class="text-amber-200 text-sm font-medium">{{ $branch->name }}</span>
             <span class="text-amber-300/60 text-sm">·</span>

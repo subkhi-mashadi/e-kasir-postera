@@ -104,10 +104,11 @@ class POSController extends Controller
             'items.*.modifiers.*.modifier_option_id' => 'required|exists:modifier_options,id',
         ]);
 
-        $branchId = session('branch_id') ?? auth()->user()->branch_id;
-        $orderId  = null;
+        $branchId    = session('branch_id') ?? auth()->user()->branch_id;
+        $companyTax  = (float) (auth()->user()->company?->tax_rate ?? 0);
+        $orderId     = null;
 
-        DB::transaction(function () use ($data, $branchId, &$orderId) {
+        DB::transaction(function () use ($data, $branchId, $companyTax, &$orderId) {
             $subtotal    = 0;
             $taxTotal    = 0;
             $itemsToSave = [];
@@ -135,9 +136,14 @@ class POSController extends Controller
                     }
                 }
 
+                // Use product tax_rate; fallback to company tax_rate if product has none
+                $effectiveTax = (float) $product->tax_rate > 0
+                    ? (float) $product->tax_rate
+                    : $companyTax;
+
                 $unitPrice  = $basePrice + $modTotal;
                 $lineTotal  = $unitPrice * (int) $item['qty'];
-                $lineTax    = $lineTotal * ((float) $product->tax_rate / 100);
+                $lineTax    = $lineTotal * ($effectiveTax / 100);
 
                 $subtotal += $lineTotal;
                 $taxTotal += $lineTax;

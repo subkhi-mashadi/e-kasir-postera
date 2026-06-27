@@ -9,6 +9,10 @@ class LandingController extends Controller
 {
     public function index()
     {
+        if (auth()->check()) {
+            return redirect()->route('app.dashboard');
+        }
+
         $plans = Plan::where('is_active', true)->orderBy('sort_order')->get();
         return view('landing.index', compact('plans'));
     }

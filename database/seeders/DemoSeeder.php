@@ -38,6 +38,19 @@ class DemoSeeder extends Seeder
             $user = User::updateOrCreate(
                 ['email' => 'demo@ekasir.app'],
                 [
+                    'name'       => 'Demo Owner',
+                    'password'   => 'demo123456',
+                    'company_id' => $company->id,
+                    'branch_id'  => $branch->id,
+                    'is_active'  => true,
+                ]
+            );
+
+            $user->syncRoles(['owner']);
+
+            $kasir = User::updateOrCreate(
+                ['email' => 'kasir@ekasir.app'],
+                [
                     'name'       => 'Demo Kasir',
                     'password'   => 'demo123456',
                     'company_id' => $company->id,
@@ -46,9 +59,7 @@ class DemoSeeder extends Seeder
                 ]
             );
 
-            if (! $user->hasRole('cashier')) {
-                $user->assignRole('cashier');
-            }
+            $kasir->syncRoles(['cashier']);
 
             $cats = [
                 ['name' => 'Kopi',     'color' => '#92400e', 'sort_order' => 1],

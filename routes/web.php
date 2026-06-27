@@ -17,6 +17,7 @@ use App\Http\Controllers\App\ReportController;
 use App\Http\Controllers\App\InventoryController;
 use App\Http\Controllers\App\ModifierGroupController;
 use App\Http\Controllers\App\ProductController;
+use App\Http\Controllers\App\StaffController;
 use App\Http\Controllers\App\TableController;
 use App\Http\Controllers\Kitchen\KitchenController;
 use App\Http\Controllers\Order\QrOrderController;
@@ -88,6 +89,9 @@ Route::middleware(['auth', 'tenant.active', 'branch.selected'])
 
         // Customers
         Route::resource('customers', CustomerController::class)->except(['show']);
+
+        // Staff management (owner only)
+        Route::resource('staff', StaffController::class)->except(['show']);
 
         // Settings (owner only)
         Route::get('/settings/payment', [SettingsController::class, 'payment'])->name('settings.payment');
