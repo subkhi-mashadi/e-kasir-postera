@@ -31,9 +31,6 @@ class Company extends Model
         'receipt_settings'        => 'array',
         'is_active'               => 'boolean',
         'midtrans_is_production'  => 'boolean',
-        'midtrans_server_key'     => 'encrypted',
-        'midtrans_client_key'     => 'encrypted',
-        'xendit_secret_key'       => 'encrypted',
     ];
 
     protected $hidden = [
@@ -41,6 +38,39 @@ class Company extends Model
         'midtrans_client_key',
         'xendit_secret_key',
     ];
+
+    public function getMidtransServerKeyAttribute($value): ?string
+    {
+        if (! $value) return null;
+        try { return decrypt($value); } catch (\Exception $e) { return null; }
+    }
+
+    public function setMidtransServerKeyAttribute(?string $value): void
+    {
+        $this->attributes['midtrans_server_key'] = $value ? encrypt($value) : null;
+    }
+
+    public function getMidtransClientKeyAttribute($value): ?string
+    {
+        if (! $value) return null;
+        try { return decrypt($value); } catch (\Exception $e) { return null; }
+    }
+
+    public function setMidtransClientKeyAttribute(?string $value): void
+    {
+        $this->attributes['midtrans_client_key'] = $value ? encrypt($value) : null;
+    }
+
+    public function getXenditSecretKeyAttribute($value): ?string
+    {
+        if (! $value) return null;
+        try { return decrypt($value); } catch (\Exception $e) { return null; }
+    }
+
+    public function setXenditSecretKeyAttribute(?string $value): void
+    {
+        $this->attributes['xendit_secret_key'] = $value ? encrypt($value) : null;
+    }
 
     public function branches()
     {
