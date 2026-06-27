@@ -17,8 +17,7 @@
         "spatie/laravel-medialibrary": "*",
         "spatie/laravel-permission": "*",
         "ext-gd": "*",
-        "ext-exif": "*",
-        "ext-pgsql": "*"
+        "ext-exif": "*"
     },
     "require-dev": {
         "fakerphp/faker": "^1.23",
