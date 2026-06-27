@@ -60,12 +60,12 @@
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse ($orders as $order)
-                <tr class="hover:bg-slate-50 transition-colors">
+                <tr class="hover:bg-amber-50 transition-colors cursor-pointer" onclick="window.location='{{ route('app.orders.show', $order) }}'">
                     <td class="px-5 py-3.5 text-slate-500 text-xs whitespace-nowrap">
                         {{ $order->created_at->format('d/m/Y H:i') }}
                     </td>
                     <td class="px-5 py-3.5">
-                        <span class="font-mono text-xs text-slate-700">
+                        <span class="font-mono text-xs text-amber-700 font-semibold">
                             {{ $order->invoice_no ?? '—' }}
                         </span>
                     </td>

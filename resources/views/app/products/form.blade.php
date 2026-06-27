@@ -3,9 +3,6 @@
 @section('page-title', isset($product) ? 'Edit Produk' : 'Tambah Produk')
 
 @section('content')
-<div class="mb-5">
-    <a href="{{ route('app.products.index') }}" class="text-slate-500 hover:text-slate-700 text-sm">&larr; Kembali</a>
-</div>
 
 <div class="bg-white rounded-2xl shadow-sm p-6"
      x-data="{
@@ -164,7 +161,7 @@
         <div>
             <label class="block text-sm font-medium text-slate-700 mb-1.5" for="tax_rate">Tarif Pajak (%)</label>
             <input type="number" id="tax_rate" name="tax_rate" min="0" max="100" step="0.01"
-                   value="{{ old('tax_rate', $product->tax_rate ?? 0) }}"
+                   value="{{ old('tax_rate', isset($product) ? $product->tax_rate : ((float) (auth()->user()->company?->tax_rate ?? 0) ?: 11)) }}"
                    class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-500"
                    placeholder="0">
         </div>

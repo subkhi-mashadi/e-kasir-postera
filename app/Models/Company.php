@@ -21,13 +21,22 @@ class Company extends Model
         'name', 'slug', 'phone', 'address', 'logo',
         'currency', 'timezone', 'tax_rate', 'tax_inclusive',
         'receipt_settings', 'is_active',
+        'midtrans_server_key', 'midtrans_client_key', 'midtrans_is_production',
     ];
 
     protected $casts = [
-        'tax_rate'         => 'decimal:2',
-        'tax_inclusive'    => 'boolean',
-        'receipt_settings' => 'array',
-        'is_active'        => 'boolean',
+        'tax_rate'                => 'decimal:2',
+        'tax_inclusive'           => 'boolean',
+        'receipt_settings'        => 'array',
+        'is_active'               => 'boolean',
+        'midtrans_is_production'  => 'boolean',
+        'midtrans_server_key'     => 'encrypted',
+        'midtrans_client_key'     => 'encrypted',
+    ];
+
+    protected $hidden = [
+        'midtrans_server_key',
+        'midtrans_client_key',
     ];
 
     public function branches()

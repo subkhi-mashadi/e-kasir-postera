@@ -144,7 +144,7 @@
     </table>
 
     <div class="footer">
-        Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} &nbsp;|&nbsp; E-Kasir &copy; {{ now()->year }}
+        Dicetak pada: {{ now()->translatedFormat('d F Y, H:i') }} &nbsp;|&nbsp; Postera &copy; {{ now()->year }}
     </div>
 
 </body>

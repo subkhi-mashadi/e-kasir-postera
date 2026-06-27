@@ -49,6 +49,29 @@ class CompanyResource extends Resource
                 Forms\Components\Toggle::make('is_active')
                     ->label('Aktif')
                     ->default(true),
+
+                Forms\Components\Section::make('Midtrans (dikonfigurasi oleh Owner)')
+                    ->collapsible()
+                    ->collapsed()
+                    ->schema([
+                        Forms\Components\TextInput::make('midtrans_server_key')
+                            ->label('Server Key')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->placeholder('Belum diisi'),
+
+                        Forms\Components\TextInput::make('midtrans_client_key')
+                            ->label('Client Key')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->placeholder('Belum diisi'),
+
+                        Forms\Components\Toggle::make('midtrans_is_production')
+                            ->label('Mode Produksi')
+                            ->disabled()
+                            ->dehydrated(false),
+                    ])
+                    ->columnSpanFull(),
             ])
             ->columns(2);
     }

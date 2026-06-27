@@ -228,7 +228,7 @@ class QrOrderController extends Controller
         $midtransQrUrl = null;
         if ($data['preferred_payment'] === 'qris' && $order->midtrans_order_id) {
             try {
-                $midtrans      = new MidtransService();
+                $midtrans      = new MidtransService($company);
                 $result        = $midtrans->chargeQris(
                     $order->midtrans_order_id,
                     (int) round((float) $order->total),
@@ -273,7 +273,7 @@ class QrOrderController extends Controller
 
     public function paymentStatus(string $token, int $orderId)
     {
-        $table = Table::with('branch')
+        $table = Table::with('branch.company')
             ->where('qr_token', $token)
             ->where('is_active', true)
             ->firstOrFail();
@@ -291,7 +291,7 @@ class QrOrderController extends Controller
         // Check with Midtrans directly (poll fallback)
         if ($order->midtrans_order_id) {
             try {
-                $midtrans = new MidtransService();
+                $midtrans = new MidtransService($table->branch->company);
                 $result   = $midtrans->getStatus($order->midtrans_order_id);
 
                 if ($result && in_array($result->transaction_status, ['settlement', 'capture'])) {
@@ -317,7 +317,8 @@ class QrOrderController extends Controller
             $seq       = Order::withoutGlobalScopes()
                 ->whereDate('created_at', today())
                 ->where('branch_id', $order->branch_id)
-                ->lockForUpdate()->count();
+                ->whereNotNull('invoice_no')
+                ->lockForUpdate()->count() + 1;
             $invoiceNo = 'INV/' . $today . '/' . str_pad($order->branch_id, 2, '0', STR_PAD_LEFT) . '/' . str_pad($seq, 4, '0', STR_PAD_LEFT);
 
             $order->update([

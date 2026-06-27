@@ -1,10 +1,9 @@
 <!DOCTYPE html>
 <html lang="id">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>E-Kasir — Masuk</title>
+    <title>Postera — Masuk</title>
     @vite(['resources/css/app.css'])
     <style>
         input:focus { outline: none !important; border-color: #f59e0b !important; }
@@ -12,24 +11,28 @@
     </style>
 </head>
 
-<body class="min-h-screen bg-amber-50 flex items-center justify-center p-4">
+<body class="min-h-screen bg-amber-50 flex items-center justify-center p-4 relative">
 
-    <div class="w-full max-w-xl">
+    {{-- Watermark logo fullscreen --}}
+    <div class="pointer-events-none select-none fixed inset-0">
+        <img src="{{ asset('icons/logo.png') }}" alt=""
+             class="w-full h-full object-cover opacity-[0.06]">
+    </div>
+    <div class="pointer-events-none fixed top-0 inset-x-0 h-64 bg-linear-to-b from-amber-200/40 to-transparent"></div>
+    <div class="pointer-events-none fixed bottom-0 inset-x-0 h-48 bg-linear-to-t from-amber-200/30 to-transparent"></div>
+
+    <div class="w-full max-w-md relative z-10">
         <div class="text-center mb-8">
-            <div
-                class="inline-flex items-center justify-center w-16 h-16 bg-amber-500 rounded-2xl shadow-lg shadow-amber-500/30 mb-4">
-                <svg class="w-9 h-9 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 11h.01M12 11h.01M15 11h.01M4 20h16a1 1 0 001-1V9a1 1 0 00-.293-.707l-5-5A1 1 0 0015 3H4a1 1 0 00-1 1v15a1 1 0 001 1z" />
-                </svg>
-            </div>
-            <h1 class="text-2xl font-bold text-slate-800">E-Kasir</h1>
+            <a href="{{ route('home') }}" class="inline-block">
+                <img src="{{ asset('icons/logo.png') }}" alt="Postera" class="w-20 h-20 object-contain mx-auto drop-shadow-md">
+            </a>
+            <h1 class="text-2xl font-black text-slate-800 tracking-tight">Postera</h1>
             <p class="text-slate-500 text-sm mt-1">Masuk ke akun Anda</p>
         </div>
 
-        <div class="bg-white rounded-3xl shadow-xl shadow-slate-200 p-8">
+        <div class="bg-white rounded-3xl shadow-xl shadow-amber-900/10 border border-amber-100/80 p-8">
             @if ($errors->any())
-            <div class="mb-4 bg-red-50 border border-red-200 rounded-2xl px-4 py-3 text-sm text-red-700">
+            <div class="mb-5 bg-red-50 border border-red-200 rounded-2xl px-4 py-3 text-sm text-red-700">
                 {{ $errors->first() }}
             </div>
             @endif
@@ -37,16 +40,16 @@
             <form method="POST" action="{{ route('login.post') }}" class="space-y-5">
                 @csrf
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Email</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Email</label>
                     <input type="email" name="email" value="{{ old('email') }}" required autofocus
-                        class="w-full border rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-500 {{ $errors->has('email') ? 'border-red-300' : 'border-slate-200' }}"
+                        class="w-full border rounded-xl px-4 py-2.5 text-sm {{ $errors->has('email') ? 'border-red-300' : 'border-slate-200' }}"
                         placeholder="email@usaha.com">
                 </div>
 
                 <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-1.5">Password</label>
+                    <label class="block text-sm font-semibold text-slate-700 mb-1.5">Password</label>
                     <input type="password" name="password" required
-                        class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-amber-500"
+                        class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm"
                         placeholder="••••••••">
                 </div>
 
@@ -57,18 +60,16 @@
                 </div>
 
                 <button type="submit"
-                    class="w-full bg-amber-500 hover:bg-amber-600 text-white font-semibold py-2.5 rounded-xl transition-colors shadow-lg shadow-amber-500/25">
+                    class="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-2.5 rounded-xl transition-colors shadow-lg shadow-amber-500/25">
                     Masuk
                 </button>
             </form>
 
-            <div class="mt-6 pt-5 border-t border-slate-100 text-xs text-slate-400 text-center space-y-1">
-                <div>Demo: <span class="font-mono text-slate-500">kasir@ekasir.test</span> / password</div>
-                <div>Owner: <span class="font-mono text-slate-500">owner@ekasir.test</span> / password</div>
-                <div>Admin: <span class="font-mono text-slate-500">superadmin@ekasir.test</span> / password</div>
-            </div>
+            <p class="text-center text-sm text-slate-500 mt-5">
+                Belum punya akun?
+                <a href="{{ route('register') }}" class="text-amber-600 font-semibold hover:underline">Daftar gratis</a>
+            </p>
         </div>
     </div>
 </body>
-
 </html>

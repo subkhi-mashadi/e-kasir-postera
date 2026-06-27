@@ -3,9 +3,6 @@
 @section('page-title', isset($group) ? 'Edit Modifier Group' : 'Tambah Modifier Group')
 
 @section('content')
-<div class="mb-5">
-    <a href="{{ route('app.modifiers.index') }}" class="text-slate-500 hover:text-slate-700 text-sm">&larr; Kembali</a>
-</div>
 
 <div class="bg-white rounded-2xl shadow-sm p-6"
      x-data="{
