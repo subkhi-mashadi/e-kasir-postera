@@ -3,8 +3,6 @@
 namespace App\Services;
 
 use App\Models\Company;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
 use Midtrans\CoreApi;
 
@@ -27,7 +25,7 @@ class MidtransService
 
     /**
      * Create a QRIS charge via Midtrans Core API.
-     * Returns ['qr_url' => string, 'qr_string' => string, 'order_id' => string] on success.
+     * Returns ['qr_url' => string, 'order_id' => string] on success.
      */
     public function chargeQris(string $orderId, int $amount, string $customerName): array
     {
@@ -44,44 +42,21 @@ class MidtransService
 
         $response = CoreApi::charge($payload);
 
-        $qrUrl      = null;
-        $qrString   = null;
-        $qrStringUrl = null;
-
+        $qrUrl = null;
         if (isset($response->actions)) {
             foreach ($response->actions as $action) {
                 if ($action->name === 'generate-qr-code') {
-                    $qrUrl       = $action->url;
-                    $qrStringUrl = $action->url;
+                    $qrUrl = $action->url;
                     break;
                 }
             }
         }
 
-        // Fetch raw QR string (EMVCo format) from the generate-qr-code URL
-        if ($qrStringUrl) {
-            try {
-                $qrResponse = Http::withBasicAuth(Config::$serverKey, '')
-                    ->get($qrStringUrl);
-
-                if ($qrResponse->successful()) {
-                    $qrData = $qrResponse->json();
-                    $qrString = $qrData['qr_code'] ?? $qrData['qr_string'] ?? null;
-                }
-            } catch (\Exception $e) {
-                Log::warning('Failed to fetch QR string from Midtrans', [
-                    'url'   => $qrStringUrl,
-                    'error' => $e->getMessage(),
-                ]);
-            }
-        }
-
         return [
-            'order_id'  => $response->order_id,
-            'qr_url'    => $qrUrl,
-            'qr_string' => $qrString,
-            'status'    => $response->transaction_status ?? 'pending',
-            'raw'       => $response,
+            'order_id'    => $response->order_id,
+            'qr_url'      => $qrUrl,
+            'status'      => $response->transaction_status ?? 'pending',
+            'raw'         => $response,
         ];
     }
 

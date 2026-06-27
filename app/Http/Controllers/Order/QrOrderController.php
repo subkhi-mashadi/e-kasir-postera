@@ -225,18 +225,16 @@ class QrOrderController extends Controller
         $order = Order::withoutGlobalScopes()->with('items.modifiers')->find($orderId);
 
         // For QRIS: call Midtrans Core API to get a dynamic QR code
-        $midtransQrUrl    = null;
-        $midtransQrString = null;
+        $midtransQrUrl = null;
         if ($data['preferred_payment'] === 'qris' && $order->midtrans_order_id) {
             try {
-                $midtrans       = new MidtransService($company);
-                $result         = $midtrans->chargeQris(
+                $midtrans      = new MidtransService($company);
+                $result        = $midtrans->chargeQris(
                     $order->midtrans_order_id,
                     (int) round((float) $order->total),
                     $data['customer_name']
                 );
-                $midtransQrUrl    = $result['qr_url'];
-                $midtransQrString = $result['qr_string'];
+                $midtransQrUrl = $result['qr_url'];
                 $order->update([
                     'midtrans_qr_url' => $midtransQrUrl,
                     'midtrans_status' => $result['status'],
@@ -259,7 +257,6 @@ class QrOrderController extends Controller
             'order_id'          => $order->id,
             'preferred_payment' => $data['preferred_payment'],
             'qris_image_url'    => $midtransQrUrl,
-            'qris_string'       => $midtransQrString,
             'table_name'        => $table->name,
             'customer_name'     => $data['customer_name'],
             'subtotal'          => (float) $order->subtotal,
