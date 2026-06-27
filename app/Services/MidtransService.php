@@ -35,7 +35,6 @@ class MidtransService
                 'order_id'     => $orderId,
                 'gross_amount' => $amount,
             ],
-            'qris' => new \stdClass(),
             'customer_details' => [
                 'first_name' => $customerName,
             ],
